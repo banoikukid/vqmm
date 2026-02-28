@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay May Mắn</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <div class="left-panel">
+            <div class="header">
+                <h1>Vòng Quay May Mắn <span class="sparkle">✨</span></h1>
+                <p>Nhập thông tin của bạn để thử vận may!</p>
+            </div>
+
+            <div class="form-container">
+                <div class="input-group">
+                    <label for="name">Họ và tên</label>
+                    <input type="text" id="name" placeholder="VD: Nguyễn Văn A" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="phone">Số điện thoại</label>
+                    <input type="tel" id="phone" placeholder="VD: 0912345678" autocomplete="off">
+                </div>
+
+                <div id="message" class="message hidden"></div>
+            </div>
+
+            <div class="winners-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h2 style="margin-bottom: 0;">Danh Sách Trúng Thưởng 🏆</h2>
+                    <button id="resetDataBtn"
+                        style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Xóa
+                        dữ liệu (Test)</button>
+                </div>
+                <div class="table-container">
+                    <table id="winnersTable">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Họ tên</th>
+                                <th>Số ĐT (Ẩn)</th>
+                                <th>Giải thưởng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="winnersBody">
+                            <!-- Winners will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="wheel-wrapper">
+                <div class="pointer">▼</div>
+                <div class="wheel-container">
+                    <canvas id="wheel" width="500" height="500"></canvas>
+                </div>
+                <button id="spinBtn" class="spin-btn">QUAY NGAY</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal for Result -->
+    <div id="resultModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="modalTitle">Chúc mừng!</h2>
+            <p id="modalDesc">Bạn đã trúng giải.</p>
+            <button id="closeModal">Tuyệt vời</button>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
