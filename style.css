@@ -20,7 +20,7 @@
 
 body {
     background: var(--background);
-    background-image: 
+    background-image:
         radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
         radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
     color: var(--text-main);
@@ -54,6 +54,7 @@ body {
     font-size: 3rem;
     font-weight: 800;
     background: linear-gradient(to right, #a78bfa, #f472b6);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 0.5rem;
@@ -67,7 +68,7 @@ body {
 .form-container {
     background: var(--surface);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 2rem;
     border-radius: 20px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -89,7 +90,7 @@ body {
     width: 100%;
     padding: 1rem 1.2rem;
     background: rgba(15, 23, 42, 0.6);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     color: white;
     font-size: 1.1rem;
@@ -130,7 +131,7 @@ body {
 .table-container {
     background: var(--surface);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     overflow: hidden;
 }
@@ -140,14 +141,15 @@ table {
     border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
     padding: 1rem;
     text-align: left;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 th {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255, 255, 255, 0.05);
     font-weight: 600;
     color: var(--text-muted);
     font-size: 0.9rem;
@@ -166,8 +168,15 @@ td {
     font-weight: 800;
 }
 
-.prize-badge.first { background: rgba(251, 191, 36, 0.2); color: #fcd34d; }
-.prize-badge.second { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; }
+.prize-badge.first {
+    background: rgba(251, 191, 36, 0.2);
+    color: #fcd34d;
+}
+
+.prize-badge.second {
+    background: rgba(56, 189, 248, 0.2);
+    color: #7dd3fc;
+}
 
 /* Right Panel */
 .right-panel {
@@ -191,13 +200,20 @@ td {
     z-index: 10;
     font-size: 3rem;
     color: var(--text-main);
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
     animation: bounce 2s infinite ease-in-out;
 }
 
 @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
 .wheel-container {
@@ -205,9 +221,9 @@ td {
     height: 450px;
     border-radius: 50%;
     position: relative;
-    box-shadow: 0 0 0 15px rgba(255,255,255,0.1), 
-                0 0 30px rgba(99, 102, 241, 0.5),
-                inset 0 0 50px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0.1),
+        0 0 30px rgba(99, 102, 241, 0.5),
+        inset 0 0 50px rgba(0, 0, 0, 0.5);
     overflow: hidden;
     background: #1e293b;
     border: 3px solid #334155;
@@ -255,7 +271,10 @@ canvas {
 /* Modal */
 .modal {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(5px);
     display: flex;
@@ -273,11 +292,11 @@ canvas {
 
 .modal-content {
     background: var(--surface);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 3rem;
     border-radius: 24px;
     text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     max-width: 400px;
     transform: scale(1);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -291,6 +310,7 @@ canvas {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     background: linear-gradient(to right, #fbbf24, #f59e0b);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -323,19 +343,58 @@ canvas {
 @media (max-width: 900px) {
     .app-container {
         flex-direction: column;
+        gap: 2rem;
     }
-    
+
     .wheel-container {
         width: 350px;
         height: 350px;
     }
 }
+
 @media (max-width: 480px) {
-    .wheel-container {
-        width: 300px;
-        height: 300px;
+    body {
+        padding: 1rem;
     }
+
     .header h1 {
+        font-size: 2rem;
+    }
+
+    .header p {
+        font-size: 0.95rem;
+    }
+
+    .wheel-container {
+        width: 280px;
+        height: 280px;
+        border-width: 2px;
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.1),
+            0 0 20px rgba(99, 102, 241, 0.5),
+            inset 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .spin-btn {
+        padding: 1rem 2rem;
+        font-size: 1.2rem;
+    }
+
+    .form-container {
+        padding: 1.5rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    th,
+    td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .pointer {
         font-size: 2.2rem;
+        top: -15px;
     }
 }
