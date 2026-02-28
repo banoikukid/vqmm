@@ -254,7 +254,16 @@ async function spin() {
 
 function handleResult(user, result) {
     if (result.targetType !== 'miss') {
-        fireConfetti();
+        if (result.targetType === 'first') {
+            const winSound = document.getElementById('winSound');
+            if (winSound) {
+                winSound.currentTime = 0;
+                winSound.play().catch(e => console.log('Audio autoplay blocked', e));
+            }
+            fireFireworks(); // Special fireworks for 1st prize
+        } else {
+            fireConfetti(); // Normal confetti for 2nd prize
+        }
 
         modalTitle.textContent = '🎉 CHÚC MỪNG 🎉';
         modalTitle.style.background = 'linear-gradient(to right, #fbbf24, #f59e0b)';
@@ -312,6 +321,35 @@ function fireConfetti() {
             requestAnimationFrame(frame);
         }
     }());
+}
+
+function fireFireworks() {
+    const duration = 5 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+    function randomInRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    const interval = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+            return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+
+        confetti(Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+        }));
+        confetti(Object.assign({}, defaults, {
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+        }));
+    }, 250);
 }
 
 closeModalBtn.addEventListener('click', () => {
