@@ -346,6 +346,10 @@ canvas {
         gap: 2rem;
     }
 
+    .left-panel {
+        min-width: 100%;
+    }
+
     .wheel-container {
         width: 350px;
         height: 350px;
@@ -354,11 +358,11 @@ canvas {
 
 @media (max-width: 480px) {
     body {
-        padding: 1rem;
+        padding: 1rem 0.5rem;
     }
 
     .header h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .header p {
@@ -366,35 +370,50 @@ canvas {
     }
 
     .wheel-container {
-        width: 280px;
-        height: 280px;
+        width: 85vw;
+        height: 85vw;
+        max-width: 300px;
+        max-height: 300px;
         border-width: 2px;
-        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0.1),
-            0 0 20px rgba(99, 102, 241, 0.5),
-            inset 0 0 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.1),
+            0 0 15px rgba(99, 102, 241, 0.5),
+            inset 0 0 20px rgba(0, 0, 0, 0.5);
     }
 
     .spin-btn {
         padding: 1rem 2rem;
         font-size: 1.2rem;
+        width: 100%;
+        max-width: 300px;
     }
 
     .form-container {
-        padding: 1.5rem;
+        padding: 1.2rem;
     }
 
     .table-container {
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     th,
     td {
         padding: 0.75rem 0.5rem;
         font-size: 0.85rem;
+        white-space: nowrap;
     }
 
     .pointer {
-        font-size: 2.2rem;
-        top: -15px;
+        font-size: 2rem;
+        top: -12px;
+    }
+
+    .modal-content {
+        padding: 2rem 1.5rem;
+        width: 90%;
+    }
+
+    .modal-content h2 {
+        font-size: 2rem;
     }
 }
