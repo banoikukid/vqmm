@@ -318,20 +318,6 @@ window.handleCheckout = async function () {
         userData.points = newPointsList;
         userPointsDisplay.textContent = newPointsList;
 
-        // 3. Format Zalo message and redirect
-        let zaloMsg = `Chào TeaNgon, tôi muốn đặt đơn hàng:\n\n`;
-        cart.forEach(item => {
-            zaloMsg += `- ${item.quantity}x ${item.name} (${(item.price * item.quantity).toLocaleString('vi-VN')}đ)\n`;
-        });
-        zaloMsg += `\nTổng cộng: ${totalAmount.toLocaleString('vi-VN')}đ\n`;
-        zaloMsg += `Người nhận: ${userData.name}\n`;
-        zaloMsg += `SĐT: ${userData.phone}\n`;
-        zaloMsg += `Địa chỉ: ${userData.address}\n\n`;
-        zaloMsg += `Vui lòng xác nhận đơn hàng giúp tôi nhé!`;
-
-        const zaloUrl = `https://zalo.me/0905850399?text=${encodeURIComponent(zaloMsg)}`;
-        window.open(zaloUrl, '_blank');
-
         // 4. Success Feedback
         cart = [];
         renderCart();

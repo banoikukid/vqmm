@@ -40,6 +40,104 @@
             min-height: 100vh;
         }
 
+        /* Admin Login Overlay */
+        #adminLoginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--sidebar-bg);
+            /* Dark background */
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-box {
+            background: var(--surface);
+            padding: 3rem 2rem;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .login-box h2 {
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+            font-size: 1.8rem;
+        }
+
+        .login-box p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            letter-spacing: 0.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .pin-input:focus {
+            border-color: var(--primary);
+        }
+
+        .login-btn-submit {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .login-btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .login-error-msg {
+            color: #ef4444;
+            margin-top: 1rem;
+            display: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
         /* Sidebar */
         .sidebar {
             width: 260px;
@@ -106,6 +204,19 @@
         .nav-item svg {
             width: 20px;
             height: 20px;
+        }
+
+        .order-badge {
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            margin-left: auto;
+            /* Push to the right */
+            display: none;
+            /* Hidden by default */
         }
 
         .sidebar-footer {
@@ -525,6 +636,18 @@
 </head>
 
 <body>
+    <!-- Admin Passcode Overlay -->
+    <div id="adminLoginOverlay">
+        <div class="login-box">
+            <h2>Đăng Nhập Quản Trị</h2>
+            <p>Vui lòng nhập mã PIN hệ thống.</p>
+            <input type="password" id="adminPin" class="pin-input" placeholder="Nhập mã PIN..." autocomplete="off"
+                autofocus>
+            <button class="login-btn-submit" onclick="checkAdminPin()">XÁC NHẬN</button>
+            <p id="adminLoginError" class="login-error-msg">Mã PIN không đúng, thử lại!</p>
+            <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8;">Gợi ý: Nhập "admin" để vào demo</p>
+        </div>
+    </div>
 
     <!-- Sidebar Overlay for Mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
@@ -555,6 +678,7 @@
                         d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
                 Đơn Hàng Mới
+                <span id="unreadOrderCount" class="order-badge">0</span>
             </li>
             <li class="nav-item" onclick="switchTab('menu', this)">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">

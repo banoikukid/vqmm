@@ -150,6 +150,18 @@ function loadOrders() {
 }
 
 function renderOrders() {
+    const unreadCount = allOrders.filter(o => o.status === 'pending').length;
+    const badgeEl = document.getElementById('unreadOrderCount');
+
+    if (badgeEl) {
+        if (unreadCount > 0) {
+            badgeEl.textContent = unreadCount;
+            badgeEl.style.display = 'inline-block';
+        } else {
+            badgeEl.style.display = 'none';
+        }
+    }
+
     ordersTableBody.innerHTML = '';
     if (allOrders.length === 0) {
         ordersTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#64748b;padding:2rem;">Chưa có đơn hàng nào.</td></tr>';
@@ -628,10 +640,36 @@ function renderCustomers() {
 }
 
 // ============================================
-// INITIALIZATION
+// INITIALIZATION AND LOGIN
 // ============================================
-// Start listening to the DB immediately
-loadOrders();
-loadProducts();
-loadBanners();
-loadCustomers();
+window.checkAdminPin = function () {
+    const pin = document.getElementById('adminPin').value.trim();
+    const errorMsg = document.getElementById('adminLoginError');
+
+    // Mật khẩu cứng (Ví dụ: "admin" hoặc "686868")
+    if (pin === 'admin' || pin === '686868') {
+        // Correct pin
+        document.getElementById('adminLoginOverlay').style.display = 'none';
+
+        // Start listening to the DB immediately
+        loadOrders();
+        loadProducts();
+        loadBanners();
+        loadCustomers();
+
+        showToast("Đăng nhập Admin thành công!");
+    } else {
+        errorMsg.style.display = 'block';
+        setTimeout(() => { errorMsg.style.display = 'none'; }, 2000);
+    }
+};
+
+// Allow pressing Enter to submit PIN
+const pinInput = document.getElementById('adminPin');
+if (pinInput) {
+    pinInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            checkAdminPin();
+        }
+    });
+}
