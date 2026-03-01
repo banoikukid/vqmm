@@ -29,59 +29,125 @@ body {
     color: var(--text-main);
 }
 
-/* Header */
-.header {
+/* Navbar (Ported from style.css) */
+.navbar {
+    width: 100%;
     background-color: #fdf8f5;
-    padding: 1rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 50;
+    height: 80px;
 }
 
 .logo {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #451a03;
+    text-decoration: none;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    text-decoration: none;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #451a03;
 }
 
-.nav-actions {
+.nav-links {
+    list-style: none;
     display: flex;
     gap: 1.5rem;
     align-items: center;
+    margin: 0;
 }
 
-.user-greeting {
-    color: #78350f;
-    font-weight: 500;
-}
-
-.points-pill {
-    background: rgba(251, 191, 36, 0.2);
-    color: var(--primary);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    margin-left: 0.5rem;
-}
-
-.nav-link {
+.nav-links li a {
     color: #78350f;
     text-decoration: none;
     font-weight: 600;
-    transition: color 0.3s;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    padding: 0.5rem 0;
+    position: relative;
 }
 
-.nav-link:hover {
-    color: var(--primary-dark);
+.nav-links li a:hover,
+.nav-links li a.active {
+    color: #fbbf24;
+}
+
+.nav-links li a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    background-color: #fbbf24;
+    transition: width 0.3s ease;
+}
+
+.nav-links li a:hover::after,
+.nav-links li a.active::after {
+    width: 100%;
+}
+
+/* Mobile Toggle Hamburger */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    z-index: 1001;
+}
+
+.menu-toggle .bar {
+    width: 25px;
+    height: 3px;
+    background-color: #451a03;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+@media (max-width: 992px) {
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        position: fixed;
+        right: -100%;
+        top: 80px;
+        flex-direction: column;
+        background-color: rgba(253, 248, 245, 0.98);
+        width: 100%;
+        height: calc(100vh - 80px);
+        text-align: center;
+        transition: right 0.3s ease;
+        padding-top: 2rem;
+        gap: 2rem;
+        box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-links.active {
+        right: 0;
+    }
+
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cart-section {
+        position: static;
+        margin-top: 2rem;
+    }
 }
 
 /* Main Layout Grid */

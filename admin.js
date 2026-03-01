@@ -642,12 +642,19 @@ function renderCustomers() {
 // ============================================
 // INITIALIZATION AND LOGIN
 // ============================================
-window.checkAdminPin = function () {
+
+let isAdminLoggedIn = false;
+
+window.checkAdminPin = function (e) {
+    if (e) e.preventDefault();
+    if (isAdminLoggedIn) return;
+
     const pin = document.getElementById('adminPin').value.trim();
     const errorMsg = document.getElementById('adminLoginError');
 
     // Mật khẩu cứng (Ví dụ: "admin" hoặc "686868")
     if (pin === 'admin' || pin === '686868') {
+        isAdminLoggedIn = true;
         // Correct pin
         document.getElementById('adminLoginOverlay').style.display = 'none';
 
@@ -669,7 +676,26 @@ const pinInput = document.getElementById('adminPin');
 if (pinInput) {
     pinInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
-            checkAdminPin();
+            checkAdminPin(e);
         }
+    });
+}
+
+// Global Nav Mobile Menu Toggle
+const mobileMenu = document.getElementById('mobile-menu');
+const navLinks = document.getElementById('nav-links');
+
+if (mobileMenu && navLinks) {
+    mobileMenu.addEventListener('click', () => {
+        mobileMenu.classList.toggle('is-active');
+        navLinks.classList.toggle('active');
+    });
+
+    // Close menu when clicking a link
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenu.classList.remove('is-active');
+            navLinks.classList.remove('active');
+        });
     });
 }

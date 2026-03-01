@@ -17,24 +17,39 @@
         <div class="loader-circle"></div>
     </div>
 
-    <!-- Header Navigation -->
-    <header class="header">
-        <a href="index.html" class="logo">
-            <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
-                style="width: 35px; height: 35px;">
-            <span><span style="color: #fbbf24;">Tea</span>ngon</span>
-        </a>
-        <div class="nav-actions">
-            <div class="user-greeting">
-                Xin chào, <span id="userNameDisplay">Khách</span>!
-                <span class="points-pill"><span id="userPointsDisplay">0</span> Điểm</span>
-                <a href="profile.html" class="reward-btn-small"
-                    style="background-color: #fca5a5; color: #7f1d1d; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; text-decoration: none; margin-left: 0.5rem; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">Đổi
-                    quà 🎁</a>
+    <!-- Navigation Bar -->
+    <nav class="navbar" style="position: sticky; top: 0; z-index: 1000;">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
+                    style="width: 40px; height: 40px;">
+                <span><span style="color: #fbbf24;">Tea</span>ngon</span>
+            </a>
+
+            <!-- Hamburger Icon -->
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
-            <a href="profile.html" class="nav-link">Hồ Sơ</a>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">TRANG CHỦ</a></li>
+                <li><a href="order.html" class="active">ĐẶT MÓN</a></li>
+                <li><a href="profile.html">HỒ SƠ KHÁCH HÀNG</a></li>
+
+                <li style="display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem;">
+                    <span style="color: #64748b; font-weight: 600;">Chào, <span id="userNameDisplay">Khách</span></span>
+                    <span class="points-pill"
+                        style="background: #fef08a; color: #854d0e; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem;"><span
+                            id="userPointsDisplay">0</span> Điểm</span>
+                    <a href="profile.html" class="reward-btn-small"
+                        style="background-color: #fca5a5; color: #7f1d1d; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;">Đổi
+                        quà 🎁</a>
+                </li>
+            </ul>
         </div>
-    </header>
+    </nav>
 
     <div class="main-layout">
 

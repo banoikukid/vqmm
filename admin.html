@@ -643,7 +643,8 @@
             <p>Vui lòng nhập mã PIN hệ thống.</p>
             <input type="password" id="adminPin" class="pin-input" placeholder="Nhập mã PIN..." autocomplete="off"
                 autofocus>
-            <button class="login-btn-submit" onclick="checkAdminPin()">XÁC NHẬN</button>
+            <button type="button" class="login-btn-submit" onclick="checkAdminPin(event)"
+                ontouchstart="checkAdminPin(event)">XÁC NHẬN</button>
             <p id="adminLoginError" class="login-error-msg">Mã PIN không đúng, thử lại!</p>
             <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8;">Gợi ý: Nhập "admin" để vào demo</p>
         </div>
@@ -721,12 +722,15 @@
 
     <!-- Main Content -->
     <main class="main-content">
-
-        <!-- TAB: ORDERS -->
-        <section id="tab-orders" class="tab-content active">
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <!-- Global Navigation Bar for Admin -->
+        <nav class="navbar"
+            style="position: sticky; top: 0; z-index: 1000; margin-bottom: 2rem; background-color: #fdf8f5; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div class="nav-container"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem;">
+                <!-- Left side: Mobile Sidebar Toggle + Page Title (changes dynamically or stays generic) -->
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()"
+                        style="display: block; background: none; border: none; cursor: pointer; padding: 0.5rem; color: #1e293b;">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -734,9 +738,34 @@
                             <line x1="3" y1="18" x2="21" y2="18"></line>
                         </svg>
                     </button>
-                    <h1>Đơn Hàng Mới</h1>
+                    <!-- Logo for mobile mainly -->
+                    <a href="index.html" class="logo"
+                        style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; font-size: 1.5rem; font-weight: 800; color: #451a03;">
+                        <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
+                            style="width: 35px; height: 35px;">
+                        <span><span style="color: #fbbf24;">Tea</span>ngon</span>
+                    </a>
                 </div>
+
+                <!-- Right side: Global Nav Links -->
+                <ul class="nav-links"
+                    style="list-style: none; display: flex; gap: 1.5rem; margin: 0; align-items: center;">
+                    <li><a href="index.html"
+                            style="color: #78350f; text-decoration: none; font-weight: 600; font-size: 0.95rem;">TRANG
+                            CHỦ</a></li>
+                    <li><a href="order.html"
+                            style="color: #78350f; text-decoration: none; font-weight: 600; font-size: 0.95rem;">ĐẶT
+                            MÓN</a></li>
+                    <li style="display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem;">
+                        <span style="color: #ef4444; font-weight: 800;">ADMIN</span>
+                    </li>
+                </ul>
             </div>
+        </nav>
+
+        <!-- TAB: ORDERS -->
+        <section id="tab-orders" class="tab-content active">
+            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">Đơn Hàng Mới</h1>
 
             <div class="card">
                 <div class="card-header">
@@ -766,18 +795,8 @@
 
         <!-- TAB: MENU MANAGEMENT -->
         <section id="tab-menu" class="tab-content">
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <h1>Quản Lý Thực Đơn</h1>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h1 style="font-size: 1.8rem; color: #0f172a;">Quản Lý Thực Đơn</h1>
                 <button class="btn btn-primary" onclick="openProductModal()">+ Thêm Món Mới</button>
             </div>
 
@@ -807,19 +826,7 @@
 
         <!-- TAB: BANNERS (Pre-existing code logic wrapped in this section) -->
         <section id="tab-banners" class="tab-content">
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <h1>Quản Lý Banners (Vòng Quay)</h1>
-                </div>
-            </div>
+            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">Quản Lý Banners (Vòng Quay)</h1>
 
             <div class="card">
                 <div class="card-header">
@@ -868,19 +875,7 @@
 
         <!-- TAB: KHÁCH HÀNG -->
         <section id="tab-customers" class="tab-content">
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <h1>Quản Lý Khách Hàng</h1>
-                </div>
-            </div>
+            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">Khách Hàng</h1>
 
             <div class="card">
                 <div class="card-header">
