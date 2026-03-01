@@ -1,7 +1,7 @@
 // file: profile.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -189,6 +189,22 @@ window.handleUpdateProfile = async function (e) {
             phone: phone,
             address: address
         });
+
+        // Query all orders by this user and update customerName and customerPhone
+        const ordersRef = ref(database, 'orders');
+        const userOrdersQuery = query(ordersRef, orderByChild('userId'), equalTo(currentUserId));
+        const snapshot = await get(userOrdersQuery);
+
+        if (snapshot.exists()) {
+            const updates = {};
+            snapshot.forEach((childSnapshot) => {
+                const orderKey = childSnapshot.key;
+                updates[`orders/${orderKey}/customerName`] = name;
+                updates[`orders/${orderKey}/customerPhone`] = phone;
+                updates[`orders/${orderKey}/deliveryAddress`] = address;
+            });
+            await update(ref(database), updates);
+        }
 
         // Update Title Display
         document.getElementById('displayTitleName').textContent = name;

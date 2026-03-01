@@ -18,6 +18,12 @@
     font-family: 'Quicksand', sans-serif;
 }
 
+html,
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
 body {
     background-color: var(--background);
     color: var(--text-main);

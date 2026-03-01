@@ -27,6 +27,12 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        html,
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
         body {
             background: var(--background);
             color: var(--text-main);
@@ -134,11 +140,70 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .top-bar h1 {
             font-size: 1.8rem;
             color: #0f172a;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            color: var(--text-main);
+        }
+
+        .sidebar-toggle:hover {
+            background: #e2e8f0;
+        }
+
+        /* Mobile Sidebar Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 90;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
         }
 
         .tab-content {
@@ -461,6 +526,9 @@
 
 <body>
 
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -533,7 +601,17 @@
         <!-- TAB: ORDERS -->
         <section id="tab-orders" class="tab-content active">
             <div class="top-bar">
-                <h1>Đơn Hàng Mới</h1>
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1>Đơn Hàng Mới</h1>
+                </div>
             </div>
 
             <div class="card">
@@ -565,7 +643,17 @@
         <!-- TAB: MENU MANAGEMENT -->
         <section id="tab-menu" class="tab-content">
             <div class="top-bar">
-                <h1>Quản Lý Thực Đơn</h1>
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1>Quản Lý Thực Đơn</h1>
+                </div>
                 <button class="btn btn-primary" onclick="openProductModal()">+ Thêm Món Mới</button>
             </div>
 
@@ -596,7 +684,17 @@
         <!-- TAB: BANNERS (Pre-existing code logic wrapped in this section) -->
         <section id="tab-banners" class="tab-content">
             <div class="top-bar">
-                <h1>Quản Lý Banners (Vòng Quay)</h1>
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1>Quản Lý Banners (Vòng Quay)</h1>
+                </div>
             </div>
 
             <div class="card">
@@ -647,7 +745,17 @@
         <!-- TAB: KHÁCH HÀNG -->
         <section id="tab-customers" class="tab-content">
             <div class="top-bar">
-                <h1>Hội Viên Khách Hàng</h1>
+                <div class="top-bar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <h1>Quản Lý Khách Hàng</h1>
+                </div>
             </div>
 
             <div class="card">
@@ -737,18 +845,32 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast">Thông báo hệ thống</div>
+    <div id="toast"></div>
 
     <script>
-        // Simple UI Tabs Switcher
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('active');
+        }
+
         function switchTab(tabId, element) {
-            // Update nav active state
+            // Update active state in sidebar
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
 
-            // Show corresponding section
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
+            // Show corresponding content
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Close sidebar on mobile after clicking a tab
+            if (window.innerWidth <= 992) {
+                document.querySelector('.sidebar').classList.remove('show');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            }
         }
 
         // Modal Logic

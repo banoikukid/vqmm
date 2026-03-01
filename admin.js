@@ -152,10 +152,11 @@ function renderOrders() {
         // Buttons
         let actionBtn = '';
         if (order.status === 'pending') {
-            actionBtn = `<button class="btn btn-success" onclick="window.markOrderComplete('${order.id}')" style="padding:0.4rem 0.8rem;font-size:0.85rem;">Xong Đơn</button>`;
+            actionBtn = `<button class="btn btn-success" onclick="window.markOrderComplete('${order.id}')" style="padding:0.4rem 0.8rem;font-size:0.85rem;margin-right:0.5rem;">Xong Đơn</button>`;
         } else {
-            actionBtn = `<button class="btn btn-outline" style="border-color:#e2e8f0;padding:0.4rem 0.8rem;font-size:0.85rem;" disabled>Đã Giao</button>`;
+            actionBtn = `<button class="btn btn-outline" style="border-color:#e2e8f0;padding:0.4rem 0.8rem;font-size:0.85rem;margin-right:0.5rem;" disabled>Đã Giao</button>`;
         }
+        actionBtn += `<button class="btn btn-danger" onclick="window.deleteOrder('${order.id}')" style="padding:0.4rem 0.8rem;font-size:0.85rem;">Xóa</button>`;
 
         tr.innerHTML = `
             <td style="font-weight:600;">${dateStr}</td>
@@ -163,7 +164,7 @@ function renderOrders() {
             <td>${itemsHtml}</td>
             <td style="font-weight:700;color:#f59e0b;">${totalFmt}</td>
             <td>${STATUS_MAP[order.status] || order.status}</td>
-            <td>${actionBtn}</td>
+            <td style="min-width:180px;">${actionBtn}</td>
         `;
         ordersTableBody.appendChild(tr);
     });
@@ -178,6 +179,17 @@ window.markOrderComplete = async function (orderId) {
     } catch (e) {
         console.error(e);
         showToast("Lỗi khi cập nhật trạng thái.", true);
+    }
+}
+
+window.deleteOrder = async function (orderId) {
+    if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này không? Hành động này không thể hoàn tác.")) return;
+    try {
+        await remove(ref(db, `orders/${orderId}`));
+        showToast("Đã xóa đơn hàng thành công!");
+    } catch (e) {
+        console.error(e);
+        showToast("Lỗi khi xóa đơn hàng.", true);
     }
 }
 
