@@ -173,22 +173,8 @@ function renderOrders() {
 window.markOrderComplete = async function (orderId) {
     if (!confirm("Bạn xác nhận đã hoàn thành và giao đơn này?")) return;
     try {
-        const order = allOrders.find(o => o.id === orderId);
-        if (order && order.userId) {
-            const earnedPoints = Math.floor((order.totalAmount || 0) / 10000);
-            if (earnedPoints > 0) {
-                const userSnapshot = await get(ref(db, `users/${order.userId}`));
-                let currentPoints = 0;
-                if (userSnapshot.exists()) {
-                    currentPoints = parseInt(userSnapshot.val().points) || 0;
-                }
-                const newPoints = currentPoints + earnedPoints;
-                await set(ref(db, `users/${order.userId}/points`), newPoints);
-            }
-        }
-
         await set(ref(db, `orders/${orderId}/status`), 'completed');
-        showToast("Đã xong đơn và cộng điểm cho khách!");
+        showToast("Đã cập nhật trạng thái đơn hàng!");
     } catch (e) {
         console.error(e);
         showToast("Lỗi khi cập nhật trạng thái.", true);
