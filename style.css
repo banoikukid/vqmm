@@ -129,6 +129,63 @@ body {
     transform: scale(1.1);
 }
 
+/* Mobile Toggle Hamburger */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    cursor: pointer;
+    gap: 5px;
+    z-index: 1001;
+}
+
+.menu-toggle .bar {
+    width: 25px;
+    height: 3px;
+    background-color: #fff;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: flex;
+    }
+
+    .nav-links {
+        position: fixed;
+        right: -100%;
+        top: 80px;
+        flex-direction: column;
+        background-color: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        width: 100%;
+        height: calc(100vh - 80px);
+        text-align: center;
+        transition: 0.3s;
+        box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
+        padding-top: 2rem;
+        gap: 2rem;
+        overflow-y: auto;
+    }
+
+    .nav-links.active {
+        right: 0;
+        display: flex !important;
+    }
+
+    .menu-toggle.is-active .bar:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.is-active .bar:nth-child(1) {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .menu-toggle.is-active .bar:nth-child(3) {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+}
+
 /* Hero Banner */
 .hero-section {
     width: 100%;

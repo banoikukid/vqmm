@@ -21,7 +21,15 @@
                     style="width: 40px; height: 40px;">
                 <span><span style="color: #fbbf24;">Tea</span>ngon</span>
             </a>
-            <ul class="nav-links">
+
+            <!-- Hamburger Icon -->
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+
+            <ul class="nav-links" id="nav-links">
                 <li><a href="#" class="active">TRANG CHỦ</a></li>
                 <li><a href="#">THÔNG TIN KHÁCH HÀNG</a></li>
                 <li><a href="login.html">ĐẶT MÓN</a></li>
@@ -265,6 +273,28 @@
         </div>
     </footer>
 
+    <!-- Mobile Menu Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('mobile-menu');
+            const navLinks = document.getElementById('nav-links');
+
+            if (menuToggle && navLinks) {
+                menuToggle.addEventListener('click', () => {
+                    menuToggle.classList.toggle('is-active');
+                    navLinks.classList.toggle('active');
+                });
+
+                // Close menu when clicking a link
+                document.querySelectorAll('.nav-links li a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        menuToggle.classList.remove('is-active');
+                        navLinks.classList.remove('active');
+                    });
+                });
+            }
+        });
+    </script>
     <script type="module" src="script.js"></script>
 </body>
 
