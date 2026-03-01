@@ -254,9 +254,16 @@ function validateInput() {
         return false;
     }
 
-    // Check if phone already played today using global Realtime connection
-    const todayStr = new Date().toLocaleDateString('vi-VN');
+    // Anti-cheat: Check LocalStorage for previous spins today
+    // *Tạm off để test Firebase IP rate limit*
+    // const lastSpinDate = localStorage.getItem('lastSpinDate');
+    // const todayStrTemp = new Date().toLocaleDateString('vi-VN');
+    // if (lastSpinDate === todayStrTemp) {
+    //     showMessage('Bạn đã quay vòng quay hôm nay rồi. Hãy quay lại vào ngày mai nhé!', 'error');
+    //     return false;
+    // }
 
+    // Check if phone already played today using global Realtime connection
     if (currentWinners.some(w => w.phone === phone && w.time.includes(todayStr))) {
         showMessage('Số điện thoại này đã tham gia quay số hôm nay!', 'error');
         return false;
@@ -291,14 +298,62 @@ async function spin() {
     isSpinning = true;
     spinBtn.disabled = true;
 
-    // 1. Roll locally based on known state (100% win rate for testing)
-    let targetType = 'miss';
+    // 0. Fetch User IP and check 1-minute cooldown in Firebase
+    let userIP = 'unknown_ip';
+    try {
+        const ipRes = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipRes.json();
+        userIP = ipData.ip.replace(/\./g, '_'); // Firebase keys can't contain '.'
+    } catch (e) {
+        console.warn("Could not fetch IP, skipping IP rate limit check.", e);
+    }
 
-    // Luôn ưu tiên phát giải nếu còn
-    if (!currentState.firstPrizeWon) {
-        targetType = 'first';
-    } else if (currentState.secondPrizeCount < 2) {
-        targetType = 'second';
+    if (userIP !== 'unknown_ip') {
+        const ipRef = ref(db, `spin_ips/${userIP}`);
+        try {
+            const ipSnapshot = await get(ipRef);
+            if (ipSnapshot.exists()) {
+                const lastSpinTime = ipSnapshot.val();
+                const now = Date.now();
+                // *Tạm off để test*
+                // // 60 seconds cooldown
+                // if (now - lastSpinTime < 60000) {
+                //     showMessage('Bạn vừa mới quay, hẹn bạn vào ngày mai!', 'error');
+                //     isSpinning = false;
+                //     spinBtn.disabled = false;
+                //     return;
+                // }
+            }
+            // Update last spin time for this IP
+            // await set(ipRef, Date.now());
+        } catch (error) {
+            console.error("Firebase IP check failed: ", error);
+        }
+    }
+
+    // 1. Roll locally based on probabilities (20% First, 30% Second, 50% Miss)
+    let targetType = 'miss';
+    const rand = Math.random();
+
+    if (rand < 0.2) {
+        // 20% chance for First Prize
+        if (!currentState.firstPrizeWon) {
+            targetType = 'first';
+        } else {
+            // First prize already taken, fallback to second or miss
+            targetType = (Math.random() < 0.5 && currentState.secondPrizeCount < 2) ? 'second' : 'miss';
+        }
+    } else if (rand < 0.5) {
+        // 30% chance for Second Prize (0.2 to 0.5)
+        if (currentState.secondPrizeCount < 2) {
+            targetType = 'second';
+        } else {
+            // Second prizes already taken, fallback to first or miss
+            targetType = (!currentState.firstPrizeWon) ? 'first' : 'miss';
+        }
+    } else {
+        // 50% chance for Miss
+        targetType = 'miss';
     }
 
     // 2. Safely reserve prize in Firebase before spinning to prevent duplication
@@ -364,11 +419,17 @@ async function spin() {
     setTimeout(() => {
         isSpinning = false;
         spinBtn.disabled = false;
-        handleResult(user, result);
+
+        // Anti-cheat: Save this successful spin to LocalStorage
+        // *Tạm off để test Firebase IP rate limit*
+        // const todayStr = new Date().toLocaleDateString('vi-VN');
+        // localStorage.setItem('lastSpinDate', todayStr);
+
+        handleResult(user, result, userIP);
     }, 5000);
 }
 
-function handleResult(user, result) {
+function handleResult(user, result, userIP = 'unknown_ip') {
     if (result.targetType !== 'miss') {
         if (result.targetType === 'first') {
             const winSound = document.getElementById('winSound');
@@ -405,7 +466,8 @@ function handleResult(user, result) {
         phone: user.phone,
         maskedPhone: maskedPhone,
         prizeName: result.slice.text,
-        type: result.targetType
+        type: result.targetType,
+        ip: userIP
     });
 
     // Auto-hide the message after winning if we hit the limit

@@ -24,6 +24,56 @@ let userData = null;
 let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
+let discountState = { applied: false, code: null, value: 0, label: '' };
+
+// ===== TELEGRAM BOT CONFIG =====
+// 1. Tạo bot qua @BotFather trên Telegram -> lấy token
+// 2. Thêm bot vào nhóm/channel của bạn -> gửi tin nhắn bất kỳ
+// 3. Truy cập: https://api.telegram.org/bot<TOKEN>/getUpdates -> lấy chat_id
+const TELEGRAM_BOT_TOKEN = '8658623562:AAE6lXK1PSECtL4j1XTS_-McQRsDWfGecWk'; // VD: '7123456789:AAF..._abc'
+const TELEGRAM_CHAT_ID = '-4999373315';   // Nhóm "Đặt hàng Trà sữa"
+// ================================
+
+async function sendTelegramNotification(order) {
+    if (!TELEGRAM_BOT_TOKEN || TELEGRAM_BOT_TOKEN.startsWith('NHAP')) return;
+
+    const time = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const itemsList = (order.items || []).map(it => `   • ${it.name} x${it.quantity}  (${(it.price * it.quantity).toLocaleString('vi-VN')}đ)`).join('\n');
+    const discountLine = order.discountAmount > 0
+        ? `\n🎫 Mã giảm: ${order.discountCode}  (-${order.discountAmount.toLocaleString('vi-VN')}đ)`
+        : '';
+
+    const msg = [
+        `🛒 *ĐƠN HÀNG MỚI* 🛒`,
+        `📅 ${time}`,
+        ``,
+        `👤 *Khách:* ${order.customerName}`,
+        `📞 *SĐT:* ${order.customerPhone}`,
+        `📍 *Địa chỉ:* ${order.deliveryAddress}`,
+        ``,
+        `🍵 *Món đặt:*`,
+        itemsList,
+        ``,
+        `💵 *Tạm tính:* ${order.subTotal.toLocaleString('vi-VN')}đ${discountLine}`,
+        `💰 *Tổng thanh toán:* ${order.totalAmount.toLocaleString('vi-VN')}đ`,
+        ``,
+        `⏳ Trạng thái: _Đang chờ xử lý_`
+    ].join('\n');
+
+    try {
+        await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: msg,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (err) {
+        console.warn('Telegram notification failed:', err);
+    }
+}
 
 // DOM Elements
 const authLoader = document.getElementById('authLoader');
@@ -250,14 +300,133 @@ function renderCart() {
 }
 
 function updateSummary(totalAmount) {
-    const fmtTotal = totalAmount.toLocaleString('vi-VN') + 'đ';
-    subTotalEl.textContent = fmtTotal;
-    grandTotalEl.textContent = fmtTotal;
+    const discountAmount = discountState.applied ? discountState.value : 0;
+    const finalTotal = Math.max(0, totalAmount - discountAmount);
 
-    // Calculate points (10,000đ = 1 point)
-    const points = Math.floor(totalAmount / 10000);
+    subTotalEl.textContent = totalAmount.toLocaleString('vi-VN') + 'đ';
+    grandTotalEl.textContent = finalTotal.toLocaleString('vi-VN') + 'đ';
+
+    // Show/hide discount row
+    const discountRow = document.getElementById('discountRow');
+    const discountAmountDisplay = document.getElementById('discountAmountDisplay');
+    const discountNameDisplay = document.getElementById('discountNameDisplay');
+    if (discountState.applied) {
+        discountRow.style.display = 'flex';
+        discountAmountDisplay.textContent = '-' + discountAmount.toLocaleString('vi-VN') + 'đ';
+        discountNameDisplay.textContent = discountState.code;
+    } else {
+        discountRow.style.display = 'none';
+    }
+
+    // Calculate points based on final total (10,000đ = 1 point)
+    const points = Math.floor(finalTotal / 10000);
     earnedPointsEl.textContent = `+${points}`;
 }
+
+// ---- Discount Code Logic ----
+window.applyDiscount = async function () {
+    if (!currentUser || !userData) return;
+
+    const codeInput = document.getElementById('discountCodeInput');
+    const discountMsg = document.getElementById('discountMessage');
+    const code = (codeInput.value || '').trim().toUpperCase();
+
+    discountMsg.style.display = 'none';
+    discountMsg.style.color = '#ef4444';
+
+    function showDiscountMsg(msg, isSuccess = false) {
+        discountMsg.textContent = msg;
+        discountMsg.style.color = isSuccess ? '#10b981' : '#ef4444';
+        if (isSuccess) {
+            discountMsg.style.textShadow = '0 0 8px rgba(16,185,129,0.7)';
+            discountMsg.style.fontWeight = '700';
+        } else {
+            discountMsg.style.textShadow = 'none';
+            discountMsg.style.fontWeight = '500';
+        }
+        discountMsg.style.display = 'block';
+    }
+
+    if (!code) {
+        showDiscountMsg('Vui lòng nhập mã giảm giá.');
+        return;
+    }
+
+    if (discountState.applied) {
+        showDiscountMsg('Đã áp mã rồi! Đặt hàng xong mới được dùng mã mới.', false);
+        return;
+    }
+
+    try {
+        const snapshot = await get(ref(database, `discount_codes/${code}`));
+        if (!snapshot.exists()) {
+            showDiscountMsg('Mã giảm giá không tồn tại!');
+            return;
+        }
+
+        const codeData = snapshot.val();
+        const todayStr = new Date().toLocaleDateString('vi-VN');
+
+        // Validate phone
+        if (codeData.phone && userData.phone && codeData.phone !== userData.phone) {
+            showDiscountMsg('Mã này không dành cho tài khoản của bạn!');
+            return;
+        }
+
+        // Validate date
+        if (codeData.expires_date && codeData.expires_date !== todayStr) {
+            showDiscountMsg('Mã giảm giá đã hết hạn sử dụng!');
+            return;
+        }
+
+        // Validate status
+        if (codeData.status !== 'unused') {
+            showDiscountMsg('Mã giảm giá này đã được sử dụng rồi!');
+            return;
+        }
+
+        // All valid – apply discount
+        const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const discountType = codeData.discount_type || 'fixed';
+
+        let finalDiscountValue = 0;
+        let discountLabel = '';
+
+        if (discountType === 'percent') {
+            const pct = parseFloat(codeData.discount_value) || 0;
+            finalDiscountValue = Math.round(cartTotal * pct / 100);
+
+            // Apply max discount cap if set
+            if (codeData.max_discount && finalDiscountValue > codeData.max_discount) {
+                finalDiscountValue = codeData.max_discount;
+            }
+            discountLabel = `${pct}%${codeData.max_discount ? ' (tối đa ' + codeData.max_discount.toLocaleString('vi-VN') + 'đ)' : ''}`;
+        } else {
+            finalDiscountValue = parseInt(codeData.discount_value) || 0;
+            discountLabel = finalDiscountValue.toLocaleString('vi-VN') + 'đ';
+        }
+
+        discountState = {
+            applied: true,
+            code: code,
+            value: finalDiscountValue,
+            label: codeData.label || code,
+            firebaseKey: code
+        };
+
+        // Re-render cart to update totals
+        updateSummary(cartTotal);
+
+        showDiscountMsg(`✨ Áp mã thành công! Giảm ${discountLabel} = -${finalDiscountValue.toLocaleString('vi-VN')}đ cho đơn hàng.`, true);
+        codeInput.disabled = true;
+        document.getElementById('btnApplyDiscount').disabled = true;
+        document.getElementById('btnApplyDiscount').style.opacity = '0.5';
+
+    } catch (err) {
+        console.error('Discount error:', err);
+        showDiscountMsg('Có lỗi xảy ra. Vui lòng thử lại!');
+    }
+};
 
 function showToast() {
     toast.classList.add('show');
@@ -283,7 +452,9 @@ window.handleCheckout = async function () {
     btnCheckout.disabled = true;
 
     try {
-        const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const subTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discountAmount = discountState.applied ? discountState.value : 0;
+        const totalAmount = Math.max(0, subTotal - discountAmount);
         const earnedPoints = Math.floor(totalAmount / 10000);
 
         // 1. Create Order Record
@@ -301,12 +472,23 @@ window.handleCheckout = async function () {
                 price: item.price,
                 quantity: item.quantity
             })),
+            subTotal: subTotal,
+            discountCode: discountState.applied ? discountState.code : null,
+            discountAmount: discountAmount,
             totalAmount: totalAmount,
-            status: "pending",               // "pending" -> "processing" -> "completed"
+            status: "pending",
             createdAt: new Date().toISOString()
         };
 
         await set(newOrderRef, orderData);
+
+        // Gửi thông báo Telegram
+        sendTelegramNotification(orderData).catch(() => { });
+
+        // Mark discount code as 'used' in Firebase
+        if (discountState.applied && discountState.firebaseKey) {
+            await set(ref(database, `discount_codes/${discountState.firebaseKey}/status`), 'used');
+        }
 
         // 2. Add Points to User Profile immediately on checkout
         const currentPoints = parseInt(userData.points) || 0;
@@ -320,6 +502,13 @@ window.handleCheckout = async function () {
 
         // 4. Success Feedback
         cart = [];
+        discountState = { applied: false, code: null, value: 0, label: '' };
+        const codeInput = document.getElementById('discountCodeInput');
+        if (codeInput) { codeInput.value = ''; codeInput.disabled = false; }
+        const btnApply = document.getElementById('btnApplyDiscount');
+        if (btnApply) { btnApply.disabled = false; btnApply.style.opacity = '1'; }
+        const discountMsg = document.getElementById('discountMessage');
+        if (discountMsg) discountMsg.style.display = 'none';
         renderCart();
 
         checkoutMessage.textContent = "Đặt hàng thành công! Quán đang chuẩn bị món cho bạn.";

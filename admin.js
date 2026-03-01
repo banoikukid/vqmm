@@ -699,3 +699,315 @@ if (mobileMenu && navLinks) {
         });
     });
 }
+
+// ============================================
+// DISCOUNT CODE MANAGEMENT
+// ============================================
+
+function generateCodeString(length = 8) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+window.updateDcValueLabel = function () {
+    const type = document.getElementById('dcType').value;
+    const label = document.getElementById('dcValueLabel');
+    const input = document.getElementById('dcValue');
+    const maxGroup = document.getElementById('dcMaxGroup');
+    if (type === 'percent') {
+        label.textContent = 'Phần Trăm Giảm (%)';
+        input.placeholder = 'VD: 20 (giảm 20%)';
+        input.max = 100;
+        maxGroup.style.display = 'block';
+    } else {
+        label.textContent = 'Giá Trị Giảm (VNĐ)';
+        input.placeholder = 'VD: 20000';
+        input.removeAttribute('max');
+        maxGroup.style.display = 'none';
+        document.getElementById('dcMaxValue').value = '';
+    }
+};
+
+window.generateDiscountCode = async function () {
+    const phone = document.getElementById('dcPhone').value.trim();
+    const valueRaw = document.getElementById('dcValue').value.trim();
+    const label = document.getElementById('dcLabel').value.trim();
+    const qty = parseInt(document.getElementById('dcQty').value) || 1;
+    const dcType = document.getElementById('dcType').value; // 'fixed' | 'percent'
+    const maxRaw = document.getElementById('dcMaxValue').value.trim();
+    const dcCreateMsg = document.getElementById('dcCreateMsg');
+
+    function showMsg(msg, isErr = false) {
+        dcCreateMsg.innerHTML = msg;
+        dcCreateMsg.style.color = isErr ? '#ef4444' : '#10b981';
+        dcCreateMsg.style.display = 'block';
+        if (!isErr) setTimeout(() => dcCreateMsg.style.display = 'none', 8000);
+    }
+
+    if (!valueRaw) {
+        showMsg('Vui lòng nhập Giá trị giảm!', true);
+        return;
+    }
+
+    const discountValue = parseFloat(valueRaw);
+    if (isNaN(discountValue) || discountValue <= 0) {
+        showMsg('Giá trị giảm phải là số dương!', true);
+        return;
+    }
+    if (dcType === 'percent' && discountValue > 100) {
+        showMsg('Phần trăm giảm không được vượt quá 100%!', true);
+        return;
+    }
+    if (qty < 1 || qty > 100) {
+        showMsg('Số lượng phải từ 1 đến 100!', true);
+        return;
+    }
+
+    const maxValue = maxRaw ? parseInt(maxRaw) : null;
+    const todayStr = new Date().toLocaleDateString('vi-VN');
+    const createdCodes = [];
+
+    try {
+        for (let i = 0; i < qty; i++) {
+            const code = generateCodeString(8);
+            const codeData = {
+                discount_type: dcType,
+                discount_value: discountValue,
+                label: label || (dcType === 'percent' ? `Giảm ${discountValue}%` : 'Mã Khuyến Mãi'),
+                status: 'unused',
+                created_date: todayStr,
+                expires_date: todayStr
+            };
+            if (phone) codeData.phone = phone;
+            if (maxValue && dcType === 'percent') codeData.max_discount = maxValue;
+
+            await set(ref(db, `discount_codes/${code}`), codeData);
+            createdCodes.push(code);
+        }
+
+        const valueLabel = dcType === 'percent'
+            ? `${discountValue}%${maxValue ? ' (tối đa ' + maxValue.toLocaleString('vi-VN') + 'đ)' : ''}`
+            : `${discountValue.toLocaleString('vi-VN')}đ`;
+        const codeList = createdCodes.map(c => `<code style="background:#f0fdf4;padding:2px 8px;border-radius:4px;font-weight:700;color:#166534;">${c}</code>`).join(' ');
+        showMsg(`✅ Tạo thành công <b>${createdCodes.length}</b> mã (Giảm ${valueLabel}/mã - HSD hôm nay):<br>${codeList}`);
+
+        document.getElementById('dcPhone').value = '';
+        document.getElementById('dcValue').value = '';
+        document.getElementById('dcLabel').value = '';
+        document.getElementById('dcQty').value = '1';
+        document.getElementById('dcMaxValue').value = '';
+
+        loadDiscountCodes();
+    } catch (err) {
+        console.error(err);
+        showMsg('Lỗi tạo mã. Thử lại!', true);
+    }
+};
+
+window.loadDiscountCodes = async function () {
+    const tbody = document.getElementById('discountsTableBody');
+    tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Đang tải...</td></tr>';
+    const todayStr = new Date().toLocaleDateString('vi-VN');
+
+    try {
+        const snap = await get(ref(db, 'discount_codes'));
+        if (!snap.exists()) {
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Chưa có mã nào.</td></tr>';
+            return;
+        }
+
+        const codes = snap.val();
+        // Show all codes for today
+        const todayCodes = Object.entries(codes).filter(([, v]) => v.expires_date === todayStr);
+
+        if (todayCodes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Không có mã nào hết hạn hôm nay.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = todayCodes.map(([code, data]) => `
+            <tr>
+                <td><strong style="font-family:monospace; color:#4f46e5; font-size:1rem;">${code}</strong></td>
+                <td>${data.label || '-'}</td>
+                <td>${data.phone || 'Tất cả'}</td>
+                <td style="color:#10b981; font-weight:700;">-${parseInt(data.discount_value).toLocaleString('vi-VN')}đ</td>
+                <td>${data.expires_date}</td>
+                <td>
+                    <span style="padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
+                        background: ${data.status === 'unused' ? '#dcfce7' : '#fee2e2'};
+                        color: ${data.status === 'unused' ? '#166534' : '#991b1b'};">
+                        ${data.status === 'unused' ? '✅ Còn Hiệu Lực' : '❌ Đã Dùng'}
+                    </span>
+                </td>
+                <td>
+                    <button onclick="deleteDiscountCode('${code}')" class="btn btn-danger btn-sm" style="padding:0.3rem 0.7rem; font-size:0.8rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">Xóa</button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Lỗi tải dữ liệu.</td></tr>';
+    }
+};
+
+window.deleteDiscountCode = async function (code) {
+    if (!confirm(`Bạn chắc chắn muốn xóa mã "${code}"?`)) return;
+    try {
+        await set(ref(db, `discount_codes/${code}`), null);
+        loadDiscountCodes();
+    } catch (err) {
+        alert('Lỗi xóa mã!');
+    }
+};
+
+// ============================================
+// SALES STATISTICS
+// ============================================
+
+// Set date picker to today on page load
+(function () {
+    const picker = document.getElementById('statsDatePicker');
+    if (picker) {
+        const today = new Date();
+        picker.value = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+})();
+
+window.loadStats = async function () {
+    const picker = document.getElementById('statsDatePicker');
+    const selectedDate = picker ? picker.value : null; // YYYY-MM-DD
+
+    // Reset UI
+    ['statTotalOrders', 'statRevenue', 'statDiscountUsed', 'statTotalDiscount', 'statPoints'].forEach(id => {
+        document.getElementById(id).textContent = '...';
+    });
+    document.getElementById('statsTopProducts').innerHTML = '<tr><td colspan="4" style="padding:1rem;color:#94a3b8;text-align:center;">Đang tải...</td></tr>';
+    document.getElementById('statsOrdersBody').innerHTML = '<tr><td colspan="7" class="loading-text">Đang tải...</td></tr>';
+    document.getElementById('statsStatusBreakdown').innerHTML = '<p style="color:#94a3b8;text-align:center;">Đang tải...</p>';
+
+    try {
+        const snap = await get(ref(db, 'orders'));
+        if (!snap.exists()) {
+            document.getElementById('statsOrdersBody').innerHTML = '<tr><td colspan="7" class="loading-text">Chưa có đơn hàng nào.</td></tr>';
+            return;
+        }
+
+        const allOrders = snap.val();
+        // Filter by selected date
+        const dayOrders = Object.entries(allOrders).filter(([, o]) => {
+            if (!o.createdAt) return false;
+            const orderDate = o.createdAt.split('T')[0]; // YYYY-MM-DD
+            return orderDate === selectedDate;
+        });
+
+        // ----- Aggregations -----
+        let totalRevenue = 0, totalDiscount = 0, discountUsedCount = 0, totalPoints = 0;
+        const productSales = {}; // { name: { qty, revenue } }
+        const statusCount = {};
+
+        dayOrders.forEach(([, o]) => {
+            const total = parseInt(o.totalAmount) || 0;
+            const discount = parseInt(o.discountAmount) || 0;
+
+            // Status count (tất cả đơn)
+            statusCount[o.status] = (statusCount[o.status] || 0) + 1;
+
+            // Chỉ tính doanh thu từ đơn đã xác nhận (processing / completed)
+            if (o.status === 'pending') return;
+
+            totalRevenue += total;
+            totalDiscount += discount;
+            if (o.discountCode) discountUsedCount++;
+            totalPoints += Math.floor(total / 10000);
+
+            // Products
+            if (Array.isArray(o.items)) {
+                o.items.forEach(item => {
+                    if (!productSales[item.name]) productSales[item.name] = { qty: 0, revenue: 0 };
+                    productSales[item.name].qty += item.quantity || 1;
+                    productSales[item.name].revenue += (item.price || 0) * (item.quantity || 1);
+                });
+            }
+        });
+
+        // KPI Cards
+        document.getElementById('statTotalOrders').textContent = dayOrders.length;
+        document.getElementById('statRevenue').textContent = totalRevenue.toLocaleString('vi-VN') + 'đ';
+        document.getElementById('statDiscountUsed').textContent = discountUsedCount;
+        document.getElementById('statTotalDiscount').textContent = totalDiscount > 0 ? '-' + totalDiscount.toLocaleString('vi-VN') + 'đ' : '0đ';
+        document.getElementById('statPoints').textContent = '+' + totalPoints;
+
+        // Top Products
+        const sortedProducts = Object.entries(productSales)
+            .sort((a, b) => b[1].qty - a[1].qty)
+            .slice(0, 10);
+
+        const topProdTbody = document.getElementById('statsTopProducts');
+        if (sortedProducts.length === 0) {
+            topProdTbody.innerHTML = '<tr><td colspan="4" style="padding:1rem;color:#94a3b8;text-align:center;">Không có dữ liệu</td></tr>';
+        } else {
+            topProdTbody.innerHTML = sortedProducts.map(([name, data], i) => `
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:0.7rem 1rem; font-weight:700; color:${i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7f32' : '#64748b'};">${i + 1}</td>
+                    <td style="padding:0.7rem 1rem;">${name}</td>
+                    <td style="padding:0.7rem 1rem; text-align:right; font-weight:700;">${data.qty}</td>
+                    <td style="padding:0.7rem 1rem; text-align:right; color:#16a34a; font-weight:600;">${data.revenue.toLocaleString('vi-VN')}đ</td>
+                </tr>
+            `).join('');
+        }
+
+        // Status Breakdown
+        const statusLabels = { pending: '⏳ Chờ Xử Lý', processing: '🔄 Đang Làm', completed: '✅ Hoàn Thành' };
+        const statusColors = { pending: '#fef3c7', processing: '#dbeafe', completed: '#dcfce7' };
+        const statusTextColors = { pending: '#92400e', processing: '#1e40af', completed: '#166534' };
+        const breakdownHtml = Object.entries(statusCount).map(([status, count]) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; margin-bottom:0.5rem; border-radius:8px; background:${statusColors[status] || '#f1f5f9'};">
+                <span style="font-weight:600; color:${statusTextColors[status] || '#334155'}">${statusLabels[status] || status}</span>
+                <span style="font-size:1.5rem; font-weight:800; color:${statusTextColors[status] || '#334155'}">${count}</span>
+            </div>
+        `).join('');
+        document.getElementById('statsStatusBreakdown').innerHTML = breakdownHtml || '<p style="color:#94a3b8;text-align:center;">Không có dữ liệu</p>';
+
+        // Full Orders Table
+        const ordersTbody = document.getElementById('statsOrdersBody');
+        if (dayOrders.length === 0) {
+            ordersTbody.innerHTML = '<tr><td colspan="7" class="loading-text">Không có đơn hàng nào trong ngày này.</td></tr>';
+        } else {
+            // Sort newest first
+            dayOrders.sort((a, b) => new Date(b[1].createdAt) - new Date(a[1].createdAt));
+            ordersTbody.innerHTML = dayOrders.map(([, o]) => {
+                const time = o.createdAt ? new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '–';
+                const items = Array.isArray(o.items)
+                    ? o.items.map(it => `${it.name} (x${it.quantity})`).join(', ')
+                    : '–';
+                const subTotal = parseInt(o.subTotal || o.totalAmount) || 0;
+                const discount = parseInt(o.discountAmount) || 0;
+                const total = parseInt(o.totalAmount) || 0;
+                const statusMap = { pending: '⏳ Chờ', processing: '🔄 Làm', completed: '✅ Xong' };
+                return `
+                    <tr>
+                        <td style="white-space:nowrap;">${time}</td>
+                        <td>${o.customerName || '–'}<br><small style="color:#94a3b8">${o.customerPhone || ''}</small></td>
+                        <td style="max-width:220px; word-break:break-word; font-size:0.85rem;">${items}</td>
+                        <td>${subTotal.toLocaleString('vi-VN')}đ</td>
+                        <td style="color:${discount > 0 ? '#10b981' : '#94a3b8'};">${discount > 0 ? '-' + discount.toLocaleString('vi-VN') + 'đ<br><small>' + o.discountCode + '</small>' : '–'}</td>
+                        <td style="font-weight:700; color:#0f172a;">${total.toLocaleString('vi-VN')}đ</td>
+                        <td>${statusMap[o.status] || o.status}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+    } catch (err) {
+        console.error('Stats error:', err);
+        document.getElementById('statsOrdersBody').innerHTML = '<tr><td colspan="7" class="loading-text">Lỗi tải dữ liệu thống kê.</td></tr>';
+    }
+};
+
+window.printStats = function () {
+    window.print();
+};

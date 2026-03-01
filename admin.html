@@ -707,6 +707,23 @@
                 </svg>
                 Khách Hàng
             </li>
+            <li class="nav-item" onclick="switchTab('discounts', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+                Tạo Mã Giảm Giá
+            </li>
+            <li class="nav-item" onclick="switchTab('stats', this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Thống Kê Hôm Nay
+            </li>
         </ul>
 
         <div class="sidebar-footer">
@@ -900,6 +917,198 @@
             </div>
         </section>
 
+        <!-- TAB: DISCOUNT CODES -->
+        <section id="tab-discounts" class="tab-content">
+            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">🏷️ Tạo Mã Giảm Giá</h1>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h2>Tạo Mã Mới (Có Giá Trị Trong Ngày)</h2>
+                </div>
+                <div style="padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Loại Giảm Giá</label>
+                        <select id="dcType" onchange="updateDcValueLabel()"
+                            style="width:100%; padding:0.75rem; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:0.95rem;">
+                            <option value="fixed">💵 Số Tiền Cố Định (VNĐ)</option>
+                            <option value="percent">📉 Theo Phần Trăm (%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="dcValueLabel">Giá Trị Giảm (VNĐ)</label>
+                        <input type="number" id="dcValue" placeholder="VD: 20000" style="width:100%">
+                    </div>
+                    <div class="form-group" id="dcMaxGroup" style="display:none;">
+                        <label>Giảm Tối Đa (VNĐ) – tuỳ chọn</label>
+                        <input type="number" id="dcMaxValue" placeholder="VD: 50000 (giới hạn giảm tối đa)"
+                            style="width:100%">
+                    </div>
+                    <div class="form-group" id="dcQtyGroup">
+                        <label>Số Lượng Mã Cần Tạo</label>
+                        <input type="number" id="dcQty" placeholder="VD: 5" min="1" max="100" value="1"
+                            style="width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới Hạn SĐT (tùy chọn – bỏ trống = mã chung)</label>
+                        <input type="tel" id="dcPhone" placeholder="VD: 0912345678 (hoặc bỏ trống)" style="width:100%">
+                    </div>
+                    <div class="form-group">
+                        <label>Ghi Chú (tùy chọn)</label>
+                        <input type="text" id="dcLabel" placeholder="VD: Khuyến mãi T3, Black Friday..."
+                            style="width:100%">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: flex-end; grid-column: span 2;">
+                        <button onclick="generateDiscountCode()" class="btn btn-primary"
+                            style="width: 100%; padding: 0.8rem; font-size: 1rem;">✨ Tạo Mã Ngay</button>
+                    </div>
+                </div>
+                <div id="dcCreateMsg" style="padding: 0 1.5rem 1rem; font-weight: 600; display: none;"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Danh Sách Mã Hôm Nay</h2>
+                    <button class="btn btn-outline" onclick="loadDiscountCodes()" style="font-size: 0.85rem;">🔄 Tải
+                        Lại</button>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Code</th>
+                                <th>Ghi Chú</th>
+                                <th>SĐT Gắn</th>
+                                <th>Giảm</th>
+                                <th>Hết Hạn</th>
+                                <th>Trạng Thái</th>
+                                <th>Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody id="discountsTableBody">
+                            <tr>
+                                <td colspan="7" class="loading-text">Chọn tab để tải mã...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: STATISTICS -->
+        <section id="tab-stats" class="tab-content">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <h1 style="font-size:1.8rem; color:#0f172a;">📊 Thống Kê Hôm Nay</h1>
+                <div style="display:flex; gap:0.75rem; align-items:center;">
+                    <input type="date" id="statsDatePicker"
+                        style="padding:0.6rem 1rem; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit; font-size:0.9rem; color:#1e293b;">
+                    <button class="btn btn-primary" onclick="loadStats()" style="padding:0.6rem 1.2rem;">🔍 Xem</button>
+                    <button class="btn btn-outline" onclick="printStats()" style="padding:0.6rem 1.2rem;">🖨️
+                        In</button>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.25rem; margin-bottom:1.5rem;"
+                id="statsKpiGrid">
+                <div class="card" style="text-align:center; padding:1.5rem;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">🛒</div>
+                    <div style="font-size:2rem; font-weight:800; color:#0f172a;" id="statTotalOrders">–</div>
+                    <div style="color:#64748b; font-size:0.9rem; margin-top:0.3rem;">Tổng Đơn Hàng</div>
+                </div>
+                <div class="card" style="text-align:center; padding:1.5rem;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">💰</div>
+                    <div style="font-size:2rem; font-weight:800; color:#16a34a;" id="statRevenue">–</div>
+                    <div style="color:#64748b; font-size:0.9rem; margin-top:0.3rem;">Doanh Thu (sau giảm)</div>
+                </div>
+                <div class="card" style="text-align:center; padding:1.5rem;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">🎫</div>
+                    <div style="font-size:2rem; font-weight:800; color:#f59e0b;" id="statDiscountUsed">–</div>
+                    <div style="color:#64748b; font-size:0.9rem; margin-top:0.3rem;">Mã Giảm Giá Đã Dùng</div>
+                </div>
+                <div class="card" style="text-align:center; padding:1.5rem;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">🔖</div>
+                    <div style="font-size:2rem; font-weight:800; color:#6366f1;" id="statTotalDiscount">–</div>
+                    <div style="color:#64748b; font-size:0.9rem; margin-top:0.3rem;">Tổng Tiền Đã Giảm</div>
+                </div>
+                <div class="card" style="text-align:center; padding:1.5rem;">
+                    <div style="font-size:2rem; margin-bottom:0.5rem;">⭐</div>
+                    <div style="font-size:2rem; font-weight:800; color:#0ea5e9;" id="statPoints">–</div>
+                    <div style="color:#64748b; font-size:0.9rem; margin-top:0.3rem;">Điểm Đã Phát Ra</div>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem; margin-bottom:1.5rem;">
+                <!-- Top Products -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🔥 Top Sản Phẩm Bán Chạy</h2>
+                    </div>
+                    <div style="padding:0.5rem;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr style="background:#f8fafc;">
+                                    <th style="padding:0.6rem 1rem; text-align:left; font-size:0.85rem; color:#64748b;">
+                                        #</th>
+                                    <th style="padding:0.6rem 1rem; text-align:left; font-size:0.85rem; color:#64748b;">
+                                        Sản Phẩm</th>
+                                    <th
+                                        style="padding:0.6rem 1rem; text-align:right; font-size:0.85rem; color:#64748b;">
+                                        SL</th>
+                                    <th
+                                        style="padding:0.6rem 1rem; text-align:right; font-size:0.85rem; color:#64748b;">
+                                        Doanh Thu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTopProducts">
+                                <tr>
+                                    <td colspan="4" style="padding:1rem; color:#94a3b8; text-align:center;">Chọn ngày và
+                                        nhấn Xem</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Order Status Breakdown -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📋 Trạng Thái Đơn Hàng</h2>
+                    </div>
+                    <div id="statsStatusBreakdown" style="padding:1.5rem;">
+                        <p style="color:#94a3b8; text-align:center;">Chọn ngày và nhấn Xem</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Order Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📄 Danh Sách Đơn Trong Ngày</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Giờ Đặt</th>
+                                <th>Khách Hàng</th>
+                                <th>Món Đã Đặt</th>
+                                <th>Tạm Tính</th>
+                                <th>Mã Giảm</th>
+                                <th>Tổng Tiền</th>
+                                <th>Trạng Thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsOrdersBody">
+                            <tr>
+                                <td colspan="7" class="loading-text">Chọn ngày để xem đơn hàng</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Modal: Add/Edit Product -->
@@ -1079,6 +1288,14 @@
                 el.classList.remove('active');
             });
             document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Auto-load data for specific tabs
+            if (tabId === 'discounts' && typeof loadDiscountCodes === 'function') {
+                loadDiscountCodes();
+            }
+            if (tabId === 'stats' && typeof loadStats === 'function') {
+                loadStats();
+            }
 
             // Close sidebar on mobile after clicking a tab
             if (window.innerWidth <= 992) {
