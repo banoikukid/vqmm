@@ -134,10 +134,14 @@ body {
         padding-top: 2rem;
         gap: 2rem;
         box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
+        /* Quan trọng: khi ẩn, không chặn touch events bên dưới */
+        pointer-events: none;
+        z-index: 999;
     }
 
     .nav-links.active {
         right: 0;
+        pointer-events: auto;
     }
 
     .main-layout {
@@ -190,6 +194,9 @@ body {
     color: var(--text-muted);
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(251, 191, 36, 0.2);
+    user-select: none;
 }
 
 .category-item:hover,
@@ -296,6 +303,9 @@ body {
     font-weight: 700;
     cursor: pointer;
     transition: background 0.2s;
+    /* Chắc chắn touch hoạt động ngay trên mobile */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(251, 191, 36, 0.3);
 }
 
 .btn-add:hover {
