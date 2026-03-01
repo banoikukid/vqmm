@@ -1,6 +1,6 @@
 // file: admin.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAwwtUtwGqXCyvgM4DVRQUsabwrgzjfDyc",
@@ -98,9 +98,11 @@ const STATUS_MAP = {
 // ============================================
 const ordersTableBody = document.getElementById('ordersTableBody');
 
+let isInitialLoad = true;
+
 function loadOrders() {
     const ordersRef = ref(db, 'orders');
-    // Listen for realtime update
+
     onValue(ordersRef, (snapshot) => {
         if (snapshot.exists()) {
             const data = snapshot.val();
@@ -114,6 +116,37 @@ function loadOrders() {
         }
         renderOrders();
     });
+
+    // Listen for NEW orders to show the floating notification
+    onChildAdded(ordersRef, (data) => {
+        if (isInitialLoad) return; // Don't trigger for existing orders on first load
+
+        const newOrder = data.val();
+        // Only notify if it's a pending order
+        if (newOrder.status === 'pending') {
+            const notifEl = document.getElementById('newOrderNotification');
+            const notifText = document.getElementById('newOrderText');
+
+            if (notifEl && notifText) {
+                // Play a tiny sound (optional, browser policies might block it without interaction, but worth a try)
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+                    audio.play().catch(e => console.log("Audio play blocked by browser."));
+                } catch (e) { }
+
+                notifText.innerText = `${newOrder.customerName || 'Khách'} vừa chốt đơn ${(newOrder.totalAmount || 0).toLocaleString('vi-VN')}đ`;
+                notifEl.classList.add('active');
+
+                // Auto hide after 8 seconds
+                setTimeout(() => {
+                    notifEl.classList.remove('active');
+                }, 8000);
+            }
+        }
+    });
+
+    // small delay to mark initial load complete
+    setTimeout(() => { isInitialLoad = false; }, 2000);
 }
 
 function renderOrders() {
