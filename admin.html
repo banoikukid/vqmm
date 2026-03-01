@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản Lý Banner Teangon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            color: #1e3a8a;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .banner-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .banner-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            align-items: center;
+        }
+
+        .banner-img-preview {
+            width: 150px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            background: #cbd5e1;
+        }
+
+        .banner-info {
+            flex: 1;
+        }
+
+        .banner-info input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(150%);
+            transition: transform 0.3s ease;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cài Đặt Banner Teangon</h1>
+            <a href="index.html" target="_blank" class="btn btn-outline" style="text-decoration: none;">Xem Website</a>
+        </div>
+
+        <div class="card">
+            <h2>Danh sách Banner hiện hành</h2>
+            <div id="loading" style="text-align: center; color: #64748b; padding: 2rem;">Đang tải dữ liệu từ Firebase...
+            </div>
+            <div id="bannerList" class="banner-list hidden">
+                <!-- Banner items will be injected here -->
+            </div>
+            <button id="saveAllBtn" class="btn btn-primary"
+                style="margin-top: 2rem; width: 100%; font-size: 1.1rem; display: none;">LƯU TẤT CẢ THAY ĐỔI</button>
+        </div>
+
+        <div class="card">
+            <h2>Thêm Banner Mới</h2>
+            <form id="addBannerForm">
+                <div class="form-group">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">
+                        <span>Link Ảnh (URL)</span>
+                        <label class="btn btn-outline"
+                            style="padding: 0.2rem 0.8rem; font-size: 0.8rem; cursor: pointer;">
+                            Tải Ảnh Từ Máy
+                            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                    <input type="text" id="newImgUrl" placeholder="https://domain.com/image.jpg" required>
+                    <small style="color: #64748b;">(Tải ảnh lên sẽ tự động điền link vào ô này)</small>
+                </div>
+                <div class="form-group">
+                    <label>Tiêu đề (Headline)</label>
+                    <input type="text" id="newHeadline"
+                        placeholder="Ví dụ: <span class='highlight-blue'>DỊCH VỤ</span><br>SET-UP QUÁN" required>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả (Sub-headline)</label>
+                    <textarea id="newSubheadline" rows="2" placeholder="Nhập mô tả..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Chữ trên Nút bấm</label>
+                    <input type="text" id="newBtnText" placeholder="Ví dụ: Xem Chi Tiết" required>
+                </div>
+                <button type="submit" class="btn btn-outline" style="width: 100%;">+ THÊM VÀO DANH SÁCH</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast">Đã lưu thành công!</div>
+
+    <script type="module" src="admin.js"></script>
+</body>
+
+</html>

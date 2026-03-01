@@ -30,16 +30,16 @@ const modalTitle = document.getElementById('modalTitle');
 const modalDesc = document.getElementById('modalDesc');
 const closeModalBtn = document.getElementById('closeModal');
 
-// Wheel configuration: 8 Slices
+// Wheel configuration: 8 Slices (Gold & Deep Blue aesthetic)
 const slices = [
-    { text: 'Giải Nhất 🥇', color: '#fbbf24', type: 'first' },
-    { text: 'Chúc may mắn', color: '#334155', type: 'miss' },
-    { text: 'Giải Nhì 🥈', color: '#38bdf8', type: 'second' },
-    { text: 'Chúc may mắn', color: '#475569', type: 'miss' },
-    { text: 'Chúc may mắn', color: '#1e293b', type: 'miss' },
-    { text: 'Giải Nhì 🥈', color: '#38bdf8', type: 'second' },
-    { text: 'Chúc may mắn', color: '#475569', type: 'miss' },
-    { text: 'Chúc may mắn', color: '#334155', type: 'miss' }
+    { text: 'Giải Nhất 🥇', color: '#fbbf24', type: 'first' }, // Gold
+    { text: 'Chúc may mắn', color: '#1e3a8a', type: 'miss' }, // Deep Blue
+    { text: 'Giải Nhì 🥈', color: '#93c5fd', type: 'second' }, // Light Blue
+    { text: 'Chúc may mắn', color: '#0f172a', type: 'miss' }, // Very Dark Blue
+    { text: 'Chúc may mắn', color: '#1e3a8a', type: 'miss' }, // Deep Blue
+    { text: 'Giải Nhì 🥈', color: '#93c5fd', type: 'second' }, // Light Blue
+    { text: 'Chúc may mắn', color: '#0f172a', type: 'miss' }, // Very Dark Blue
+    { text: 'Chúc may mắn', color: '#1e3a8a', type: 'miss' }  // Deep Blue
 ];
 
 const totalSlices = slices.length;
@@ -49,8 +49,31 @@ let isSpinning = false;
 let currentWinners = [];
 let currentState = { firstPrizeWon: false, secondPrizeCount: 0 };
 
+// Default banners if Firebase has no data
+const defaultBanners = [
+    {
+        imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>DỊCH VỤ</span><br>SET-UP QUÁN",
+        subheadline: "Với nhiều năm kinh nghiệm đồng hành cùng khách hàng trong hành trình xây dựng quán - chuỗi cà phê, trà sữa từ những bước đầu tiên. WAO đã xây dựng những gói dịch vụ tư vấn SET-UP quán khác nhau nhằm đáp ứng từng mô hình kinh doanh quán.",
+        buttonText: "Đăng Ký Tư Vấn"
+    },
+    {
+        imageUrl: "https://images.unsplash.com/photo-1588691880486-13cced2d2f83?q=80&w=2074&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>NGUYÊN LIỆU</span><br>TRÀ SỮA CHUẨN VỊ",
+        subheadline: "Cung cấp nguồn nguyên liệu chất lượng cao, từ trà lá, trân châu đến các loại siro pha chế. Giúp quán của bạn luôn giữ được hương vị đặc trưng và chinh phục mọi thực khách.",
+        buttonText: "Xem sản phẩm"
+    },
+    {
+        imageUrl: "https://images.unsplash.com/photo-1600171260384-25cb97d41f3e?q=80&w=2070&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>THIẾT BỊ</span><br>PHA CHẾ TỐI ƯU",
+        subheadline: "Từ máy pha cà phê chuyên nghiệp đến máy định lượng đường, máy dập nắp ly. Chúng tôi cung cấp giải pháp thiết bị toàn diện với chế độ bảo hành tận tâm.",
+        buttonText: "Nhận báo giá"
+    }
+];
+
 // Initialize
-function init() {
+async function init() {
+    await initBanners();
     drawWheel();
 
     const todayKey = getTodayKey();
@@ -73,6 +96,58 @@ function init() {
         // Sort descending by timestamp -> newest at the top
         currentWinners.sort((a, b) => b.timestamp - a.timestamp);
         renderWinnersFromData(currentWinners);
+    });
+}
+
+async function initBanners() {
+    const bannerRef = ref(db, 'config/banners');
+    try {
+        const snapshot = await get(bannerRef);
+        let banners = [];
+        if (snapshot.exists()) {
+            banners = snapshot.val();
+        } else {
+            // Seed DB with defaults if emptiness
+            await set(bannerRef, defaultBanners);
+            banners = defaultBanners;
+        }
+        renderBanners(banners);
+    } catch (e) {
+        console.error("Failed to load banners from DB, falling back to default.", e);
+        renderBanners(defaultBanners);
+    }
+}
+
+function renderBanners(banners) {
+    const bannerWrapper = document.getElementById('bannerWrapper');
+    if (!bannerWrapper) return;
+    bannerWrapper.innerHTML = '';
+
+    banners.forEach(b => {
+        const slide = document.createElement('div');
+        slide.className = 'swiper-slide';
+        slide.innerHTML = `
+            <div class="slide-bg" style="background-image: url('${b.imageUrl}');"></div>
+            <div class="slide-overlay split-overlay"></div>
+            <div class="slide-content split-layout">
+                <div class="slide-text">
+                    <h2 class="slide-headline dark-text">${b.headline}</h2>
+                    <p class="slide-subheadline dark-text">${b.subheadline}</p>
+                    <button class="slide-btn glow-btn">${b.buttonText}</button>
+                </div>
+            </div>
+        `;
+        bannerWrapper.appendChild(slide);
+    });
+
+    // Start Swiper AFTER rendering
+    new Swiper('.hero-swiper', {
+        loop: true,
+        autoplay: { delay: 5000, disableOnInteraction: false },
+        pagination: { el: '.swiper-pagination', clickable: true },
+        navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+        effect: 'fade',
+        fadeEffect: { crossFade: true }
     });
 }
 
@@ -109,7 +184,8 @@ function drawWheel() {
         ctx.translate(centerX, centerY);
         ctx.rotate(startAngle + arc / 2);
         ctx.textAlign = 'right';
-        ctx.fillStyle = slice.type === 'miss' ? '#94a3b8' : '#0f172a';
+        // Set contrasting text colors based on background
+        ctx.fillStyle = (slice.color === '#fbbf24' || slice.color === '#93c5fd') ? '#020617' : '#e2e8f0';
         ctx.font = 'bold 20px Outfit, sans-serif';
 
         if (slice.type !== 'miss') {
@@ -261,14 +337,17 @@ function handleResult(user, result) {
                 winSound.play().catch(e => console.log('Audio autoplay blocked', e));
             }
             fireFireworks(); // Special fireworks for 1st prize
+            modalTitle.textContent = 'CHÚC MỪNG BẠN ĐÃ ĐẠT GIẢI NHẤT!';
+            modalTitle.style.fontSize = '2rem';
         } else {
             fireConfetti(); // Normal confetti for 2nd prize
+            modalTitle.textContent = '🎉 CHÚC MỪNG 🎉';
+            modalTitle.style.fontSize = '2.5rem';
         }
 
-        modalTitle.textContent = '🎉 CHÚC MỪNG 🎉';
-        modalTitle.style.background = 'linear-gradient(to right, #fbbf24, #f59e0b)';
+        modalTitle.style.background = 'linear-gradient(to right, #fbbf24, #fcd34d)';
         modalTitle.style.webkitBackgroundClip = 'text';
-        modalDesc.innerHTML = `${user.name} đã trúng<br><strong>${result.slice.text}</strong>!`;
+        modalDesc.innerHTML = `${user.name} đã trúng<br><strong style="color: #fbbf24; font-size: 1.5rem;">${result.slice.text}</strong>!`;
     } else {
         modalTitle.textContent = 'Rất tiếc!';
         modalTitle.style.background = 'linear-gradient(to right, #94a3b8, #cbd5e1)';

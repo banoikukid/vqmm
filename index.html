@@ -7,10 +7,67 @@
     <title>Vòng Quay May Mắn</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
+                    style="width: 40px; height: 40px;">
+                <span><span style="color: #fbbf24;">Tea</span>ngon</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#" class="active">TRANG CHỦ</a></li>
+                <li><a href="#">GIỚI THIỆU</a></li>
+                <li><a href="#">NGUYÊN LIỆU PHA CHẾ</a></li>
+                <li><a href="#">NGUYÊN LIỆU TRÀ SỮA</a></li>
+                <li><a href="#">THIẾT BỊ - CÔNG CỤ</a></li>
+                <li><a href="#">CÔNG THỨC PHA CHẾ</a></li>
+                <li><a href="#">TIN TỨC</a></li>
+                <li><a href="#">LIÊN HỆ</a></li>
+                <li><a href="#" class="cart-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                    </a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="swiper hero-swiper">
+            <div class="swiper-wrapper" id="bannerWrapper">
+                <!-- Slides will be injected here by script.js -->
+            </div>
+            <!-- Pagination & Navigation -->
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-prev" style="color: #1e3a8a;"></div>
+            <div class="swiper-button-next" style="color: #1e3a8a;"></div>
+        </div>
+    </div>
+
+    <!-- Member Lookup Section -->
+    <div class="lookup-section">
+        <div class="lookup-container">
+            <h3>Tra Cứu Thông Tin Thành Viên</h3>
+            <p>Nhập số điện thoại để kiểm tra ưu đãi và điểm tích lũy của bạn</p>
+            <div class="lookup-flex">
+                <input type="tel" id="memberPhone" placeholder="Nhập số điện thoại của bạn..." autocomplete="off">
+                <button id="lookupBtn" class="lookup-btn glow-btn" style="padding: 1rem 2rem; font-size: 1.1rem;">Kiểm
+                    Tra Ngay</button>
+            </div>
+            <div id="lookupResult" class="lookup-result hidden"></div>
+        </div>
+    </div>
 
     <div class="app-container">
 
@@ -83,6 +140,45 @@
     <!-- Audio Effect -->
     <audio id="winSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
 
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        // Parallax Effect on Scroll
+        window.addEventListener('scroll', () => {
+            const slideBgs = document.querySelectorAll('.slide-bg');
+            const scrollY = window.scrollY;
+            slideBgs.forEach(bg => {
+                bg.style.transform = `translateY(${scrollY * 0.4}px)`;
+            });
+        });
+
+        // Member Lookup Logic
+        document.getElementById('lookupBtn').addEventListener('click', () => {
+            const phone = document.getElementById('memberPhone').value.trim();
+            const resultMsg = document.getElementById('lookupResult');
+            resultMsg.className = 'lookup-result hidden';
+
+            if (!phone || !/(84|0[3|5|7|8|9])+([0-9]{8})\b/.test(phone)) {
+                resultMsg.textContent = 'Vui lòng nhập định dạng số điện thoại hợp lệ nha.';
+                resultMsg.className = 'lookup-result error';
+                resultMsg.style.display = 'block';
+                return;
+            }
+
+            resultMsg.textContent = 'Đang tra cứu...';
+            resultMsg.className = 'lookup-result';
+            resultMsg.style.display = 'block';
+
+            setTimeout(() => {
+                if (phone.endsWith('8') || phone.endsWith('9')) {
+                    resultMsg.innerHTML = `Tuyệt vời! Số ${phone} hiện là thành viên Vàng, bạn có đặc quyền tham gia ưu đãi hôm nay.`;
+                    resultMsg.className = 'lookup-result success';
+                } else {
+                    resultMsg.innerHTML = `Không tìm thấy thông tin ưu đãi cho số: ${phone}. Tuy nhiên, bạn vẫn có thể tham gia vòng quay bên dưới!`;
+                    resultMsg.className = 'lookup-result error';
+                }
+            }, 800);
+        });
+    </script>
     <script type="module" src="script.js"></script>
 </body>
 
