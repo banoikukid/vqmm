@@ -1,7 +1,7 @@
 // file: profile.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -83,11 +83,90 @@ onAuthStateChanged(auth, async (user) => {
             authLoader.style.display = 'none';
         }
 
+        // Fetch User's Orders History
+        loadUserOrders(currentUserId);
+
     } else {
         // User is signed out, redirect to login
         window.location.href = "login.html";
     }
 });
+
+// STATUS MAP
+const STATUS_MAP = {
+    'pending': '<span style="background: #fef3c7; color: #d97706; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Chờ Xử Lý</span>',
+    'completed': '<span style="background: #d1fae5; color: #059669; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Đã Xong</span>'
+};
+
+function loadUserOrders(uid) {
+    const ordersRef = ref(database, 'orders');
+    onValue(ordersRef, (snapshot) => {
+        const orderHistoryContainer = document.getElementById('orderHistoryContainer');
+        orderHistoryContainer.innerHTML = ''; // Selectively clear out old orders
+
+        if (snapshot.exists()) {
+            const allData = snapshot.val();
+            // Filter orders belonging to this user
+            const userOrders = Object.keys(allData)
+                .map(key => ({ id: key, ...allData[key] }))
+                .filter(o => o.userId === uid)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Newest first
+
+            if (userOrders.length === 0) {
+                orderHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Bạn chưa có đơn hàng nào.</p>';
+                return;
+            }
+
+            userOrders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.style.cssText = `
+                    background: #f8fafc;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    padding: 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                `;
+
+                const dateObj = new Date(order.createdAt);
+                const dateStr = `${dateObj.getHours()}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+
+                let itemsHtml = '<ul style="list-style: none; padding: 0; margin: 0; font-size: 0.95rem; color: #475569;">';
+                if (order.items && Array.isArray(order.items)) {
+                    order.items.forEach(i => {
+                        itemsHtml += `<li style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span>${i.quantity}x ${i.name}</span>
+                            <span style="font-weight: 600;">${(i.price * i.quantity).toLocaleString('vi-VN')}đ</span>
+                        </li>`;
+                    });
+                }
+                itemsHtml += '</ul>';
+
+                const totalFmt = (order.totalAmount || 0).toLocaleString('vi-VN') + 'đ';
+                const statusHtml = STATUS_MAP[order.status] || order.status;
+
+                orderCard.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+                        <span style="font-weight: 600; color: #0f172a;">${dateStr}</span>
+                        ${statusHtml}
+                    </div>
+                    <div>
+                        ${itemsHtml}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #cbd5e1; padding-top: 1rem; margin-top: 0.5rem;">
+                        <span style="font-weight: 600;">Tổng tiền:</span>
+                        <span style="font-weight: 700; color: #f59e0b; font-size: 1.1rem;">${totalFmt}</span>
+                    </div>
+                `;
+                orderHistoryContainer.appendChild(orderCard);
+            });
+
+        } else {
+            orderHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Bạn chưa có đơn hàng nào.</p>';
+        }
+    });
+}
 
 window.handleUpdateProfile = async function (e) {
     e.preventDefault();

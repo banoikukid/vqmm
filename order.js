@@ -308,15 +308,7 @@ window.handleCheckout = async function () {
 
         await set(newOrderRef, orderData);
 
-        // 2. Add Points to User Profile
-        const currentPoints = parseInt(userData.points) || 0;
-        const newPointsList = currentPoints + earnedPoints;
-
-        await set(ref(database, `users/${currentUser.uid}/points`), newPointsList);
-
-        // Update local state and UI
-        userData.points = newPointsList;
-        userPointsDisplay.textContent = newPointsList;
+        // Wait for admin approval to add points
 
         // 3. Success Feedback
         cart = [];
