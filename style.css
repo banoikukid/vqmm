@@ -174,11 +174,15 @@ body {
         padding-top: 2rem;
         gap: 2rem;
         overflow-y: auto;
+        /* Không chặn touch events khi menu đóng */
+        pointer-events: none;
+        z-index: 998;
     }
 
     .nav-links.active {
         right: 0;
         display: flex !important;
+        pointer-events: auto;
     }
 
     .menu-toggle.is-active .bar:nth-child(2) {
@@ -586,10 +590,69 @@ body {
 /* Left Panel */
 .left-panel {
     flex: 1;
-    min-width: 320px;
+    min-width: 280px;
     display: flex;
     flex-direction: column;
     gap: 2rem;
+}
+
+/* ===== Lucky Wheel Mobile Responsive ===== */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+        padding: 0 1rem;
+        gap: 2rem;
+        margin: 1rem auto 3rem auto;
+    }
+
+    .left-panel {
+        width: 100%;
+        min-width: unset;
+        order: 2;
+        /* Form + winners sau vòng quay */
+    }
+
+    .right-panel {
+        width: 100%;
+        order: 1;
+        /* Vòng quay hiện đầu tiên trên mobile */
+    }
+
+    .wheel-wrapper {
+        gap: 1.25rem;
+    }
+
+    /* Scale canvas xuống vừa màn hình nhỏ */
+    .wheel-container {
+        width: min(90vw, 340px) !important;
+        height: min(90vw, 340px) !important;
+    }
+
+    .wheel-container canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .spin-btn {
+        font-size: 1rem !important;
+        padding: 0.9rem 2.5rem !important;
+    }
+
+    .header h1 {
+        font-size: 2rem;
+    }
+
+    .winners-section h2 {
+        font-size: 1.1rem;
+    }
+
+    .table-container {
+        font-size: 0.82rem;
+    }
+
+    .form-container .input-group input {
+        font-size: 1rem;
+    }
 }
 
 .header h1 {

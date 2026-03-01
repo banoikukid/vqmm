@@ -364,6 +364,33 @@
             }
         }
     </style>
+
+    <script>
+        // ---- Hamburger Mobile Menu Toggle ----
+        (function () {
+            const toggle = document.getElementById('mobile-menu');
+            const navLinks = document.getElementById('nav-links');
+            if (!toggle || !navLinks) return;
+
+            function toggleMenu(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggle.classList.toggle('is-active');
+                navLinks.classList.toggle('active');
+            }
+
+            toggle.addEventListener('click', toggleMenu);
+            toggle.addEventListener('touchend', toggleMenu, { passive: false });
+
+            // Đóng menu khi bấm vào vùng ngoài
+            document.addEventListener('touchend', function (e) {
+                if (!toggle.contains(e.target) && !navLinks.contains(e.target)) {
+                    toggle.classList.remove('is-active');
+                    navLinks.classList.remove('active');
+                }
+            });
+        })();
+    </script>
 </body>
 
 </html>
