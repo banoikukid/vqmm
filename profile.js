@@ -1,7 +1,7 @@
 // file: profile.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, update, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, query, orderByChild, equalTo, push, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -225,5 +225,60 @@ window.handleLogout = async function () {
         // Observer will handle the redirect automatically
     } catch (error) {
         showMessage("Lỗi đăng xuất. Vui lòng thử lại.", true);
+    }
+};
+
+window.redeemGift = async function (giftId, giftName, cost) {
+    if (!currentUserId) return;
+
+    // Retrieve latest user data to ensure accurate points
+    try {
+        const snapshot = await get(ref(database, `users/${currentUserId}`));
+        if (!snapshot.exists()) return;
+        const userData = snapshot.val();
+        const currentPoints = parseInt(userData.points) || 0;
+
+        if (currentPoints < cost) {
+            showMessage(`Bạn không đủ điểm! Cần thêm ${cost - currentPoints} điểm nữa.`, true);
+            return;
+        }
+
+        if (!confirm(`Bạn có chắc muốn đổi ${cost} điểm để nhận "${giftName}" không?`)) {
+            return;
+        }
+
+        // Deduct points
+        const newPoints = currentPoints - cost;
+        await update(ref(database, `users/${currentUserId}`), {
+            points: newPoints
+        });
+        document.getElementById('displayPoints').textContent = newPoints; // Update UI immediately
+
+        // Create a special order for the admin
+        const ordersRef = ref(database, 'orders');
+        const newOrderRef = push(ordersRef);
+
+        const orderData = {
+            userId: currentUserId,
+            customerName: userData.name || '',
+            customerPhone: userData.phone || '',
+            deliveryAddress: userData.address || '',
+            items: [{
+                id: giftId,
+                name: `[QUÀ TẶNG] ${giftName}`,
+                price: 0,
+                quantity: 1
+            }],
+            totalAmount: 0,
+            status: "pending",
+            createdAt: new Date().toISOString()
+        };
+
+        await set(newOrderRef, orderData);
+
+        showMessage(`Đổi quà thành công! Quán đã nhận được yêu cầu lấy "${giftName}" của bạn.`);
+    } catch (err) {
+        console.error("Gift redemption error:", err);
+        showMessage("Lỗi hệ thống khi đổi quà. Vui lòng thử lại.", true);
     }
 };

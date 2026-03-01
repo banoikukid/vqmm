@@ -134,6 +134,73 @@
     <div id="toast" class="toast">Đã thêm vào giỏ hàng!</div>
 
     <script type="module" src="order.js"></script>
+
+    <!-- Zalo Floating Widget -->
+    <a href="https://zalo.me/0905850399" target="_blank" class="zalo-widget">
+        <div class="zalo-pulse"></div>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Icon_of_Zalo.svg/2048px-Icon_of_Zalo.svg.png"
+            alt="Zalo Chat">
+    </a>
+    <style>
+        .zalo-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .zalo-widget img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .zalo-widget:hover img {
+            transform: scale(1.1);
+        }
+
+        .zalo-pulse {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0068ff;
+            border-radius: 50%;
+            z-index: 1;
+            animation: pulse-zalo 1.5s infinite;
+        }
+
+        @keyframes pulse-zalo {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .zalo-widget {
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+    </style>
 </body>
 
 </html>

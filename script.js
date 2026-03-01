@@ -49,31 +49,31 @@ let isSpinning = false;
 let currentWinners = [];
 let currentState = { firstPrizeWon: false, secondPrizeCount: 0 };
 
-// Default banners if Firebase has no data
 const defaultBanners = [
     {
-        imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=2047&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>DỊCH VỤ</span><br>SET-UP QUÁN",
-        subheadline: "Với nhiều năm kinh nghiệm đồng hành cùng khách hàng trong hành trình xây dựng quán - chuỗi cà phê, trà sữa từ những bước đầu tiên. WAO đã xây dựng những gói dịch vụ tư vấn SET-UP quán khác nhau nhằm đáp ứng từng mô hình kinh doanh quán.",
-        buttonText: "Đăng Ký Tư Vấn"
+        imageUrl: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?q=80&w=2070&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>FUN FRESH</span><br>FRIENDLY",
+        subheadline: "Thưởng thức trà sữa Matcha tươi mát siêu cuốn, mang đến niềm vui và năng lượng tích cực cho cả ngày dài!",
+        buttonText: "Đặt Món Ngay"
     },
     {
-        imageUrl: "https://images.unsplash.com/photo-1588691880486-13cced2d2f83?q=80&w=2074&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>NGUYÊN LIỆU</span><br>TRÀ SỮA CHUẨN VỊ",
-        subheadline: "Cung cấp nguồn nguyên liệu chất lượng cao, từ trà lá, trân châu đến các loại siro pha chế. Giúp quán của bạn luôn giữ được hương vị đặc trưng và chinh phục mọi thực khách.",
-        buttonText: "Xem sản phẩm"
+        imageUrl: "https://images.unsplash.com/photo-1576092762791-dd9e22205948?q=80&w=2070&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>HƯƠNG VỊ</span><br>NGUYÊN BẢN",
+        subheadline: "Sự kết hợp hoàn hảo giữa trà xanh nguyên lá thượng hạng và trân châu dai giòn sần sật.",
+        buttonText: "Xem Menu"
     },
     {
-        imageUrl: "https://images.unsplash.com/photo-1600171260384-25cb97d41f3e?q=80&w=2070&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>THIẾT BỊ</span><br>PHA CHẾ TỐI ƯU",
-        subheadline: "Từ máy pha cà phê chuyên nghiệp đến máy định lượng đường, máy dập nắp ly. Chúng tôi cung cấp giải pháp thiết bị toàn diện với chế độ bảo hành tận tâm.",
-        buttonText: "Nhận báo giá"
+        imageUrl: "https://images.unsplash.com/photo-1598515089851-dceb2929de28?q=80&w=2070&auto=format&fit=crop",
+        headline: "<span class='highlight-blue'>FREE ƯU ĐÃI</span><br>CHO THÀNH VIÊN",
+        subheadline: "Trở thành hội viên TeaNgon ngay hôm nay để nhận được hàng ngàn voucher và dễ dàng đổi điểm lấy quà siêu to.",
+        buttonText: "Đăng Ký Khách Hàng"
     }
 ];
 
 // Initialize
 async function init() {
     await initBanners();
+    await fetchHotProducts();
     drawWheel();
 
     const todayKey = getTodayKey();
@@ -149,6 +149,46 @@ function renderBanners(banners) {
         effect: 'fade',
         fadeEffect: { crossFade: true }
     });
+}
+
+async function fetchHotProducts() {
+    const grid = document.getElementById('hotItemsGrid');
+    if (!grid) return;
+
+    try {
+        const snapshot = await get(ref(db, 'products'));
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            let products = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+
+            // Take the first 4 products
+            const hotProducts = products.slice(0, 4);
+
+            grid.innerHTML = '';
+            hotProducts.forEach((p, index) => {
+                const imgUrl = p.imageUrl || "https://images.unsplash.com/photo-1556881286-fc6915169721?q=80&w=1974&auto=format&fit=crop";
+                grid.innerHTML += `
+                    <div class="hot-card">
+                        <div class="hot-badge">Hot 🔥</div>
+                        <img src="${imgUrl}" alt="${p.name}">
+                        <div class="hot-info">
+                            <h3>${p.name}</h3>
+                            <p class="hot-desc">Món uống được yêu thích tại TeaNgon.</p>
+                            <div class="hot-price-row">
+                                <span class="hot-price">${parseInt(p.price).toLocaleString('vi-VN')}đ</span>
+                                <a href="order.html" class="hot-btn">Mua ngay</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            grid.innerHTML = '<p style="text-align:center; grid-column: 1 / -1; color: var(--text-muted);">Hiện chưa có Món nào để hiển thị.</p>';
+        }
+    } catch (e) {
+        console.error("Error fetching hot products:", e);
+        grid.innerHTML = '<p style="text-align:center; grid-column: 1 / -1; color: red;">Lỗi tải dữ liệu Món.</p>';
+    }
 }
 
 function getTodayKey() {
