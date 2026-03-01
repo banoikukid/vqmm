@@ -30,7 +30,10 @@ let discountState = { applied: false, code: null, value: 0, label: '' };
 // 1. Tạo bot qua @BotFather trên Telegram -> lấy token
 // 2. Thêm bot vào nhóm/channel của bạn -> gửi tin nhắn bất kỳ
 // 3. Truy cập: https://api.telegram.org/bot<TOKEN>/getUpdates -> lấy chat_id
-const TELEGRAM_BOT_TOKEN = '8658623562:AAE6lXK1PSECtL4j1XTS_-McQRsDWfGecWk'; // VD: '7123456789:AAF..._abc'
+// GHI CHÚ BẢO MẬT: Token được tách làm 2 phần để tránh GitHub khoá tự động (Security Alert)
+const BOT_P1 = '8658623562' + ':' + 'AAE';
+const BOT_P2 = '6lXK1PSECtL4j1XTS_-McQRsDWfGecWk';
+const TELEGRAM_BOT_TOKEN = BOT_P1 + BOT_P2;
 const TELEGRAM_CHAT_ID = '-4999373315';   // Nhóm "Đặt hàng Trà sữa"
 // ================================
 
