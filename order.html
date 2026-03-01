@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Món - TeaNgon</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="order.css">
+</head>
+
+<body>
+
+    <!-- Full screen loader while checking auth state -->
+    <div id="authLoader">
+        <div class="loader-circle"></div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="header">
+        <a href="index.html" class="logo">
+            <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
+                style="width: 35px; height: 35px;">
+            <span><span style="color: #fbbf24;">Tea</span>ngon</span>
+        </a>
+        <div class="nav-actions">
+            <div class="user-greeting">
+                Xin chào, <span id="userNameDisplay">Khách</span>!
+                <span class="points-pill"><span id="userPointsDisplay">0</span> Điểm</span>
+            </div>
+            <a href="profile.html" class="nav-link">Hồ Sơ</a>
+        </div>
+    </header>
+
+    <div class="main-layout">
+
+        <!-- Left Sidebar: Categories -->
+        <aside class="sidebar">
+            <h3>Danh Mục Menu</h3>
+            <ul class="category-list" id="categoryList">
+                <li class="category-item active" data-category="all">Tất Cả Món</li>
+                <li class="category-item" data-category="combo">Combo Khuyến Mãi</li>
+                <li class="category-item" data-category="milktea">Trà Sữa Tuyệt Đỉnh</li>
+                <li class="category-item" data-category="fruit">Trà Trái Cây Tươi</li>
+                <li class="category-item" data-category="topping">Topping Thêm</li>
+            </ul>
+        </aside>
+
+        <!-- Center Content: Menu Items Grid -->
+        <main class="menu-content">
+            <div class="menu-header">
+                <h2 id="currentCategoryTitle">Tất Cả Món</h2>
+                <div class="search-box">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm món yêu thích...">
+                </div>
+            </div>
+
+            <!-- This is where javascript will inject the products -->
+            <div class="products-grid" id="productsGrid">
+                <!-- Skeletons for loading state -->
+                <div class="product-card skeleton">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text line-1"></div>
+                    <div class="skeleton-text line-2"></div>
+                </div>
+                <div class="product-card skeleton">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text line-1"></div>
+                    <div class="skeleton-text line-2"></div>
+                </div>
+                <div class="product-card skeleton">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-text line-1"></div>
+                    <div class="skeleton-text line-2"></div>
+                </div>
+            </div>
+
+            <div id="emptyMenuMessage" class="empty-message" style="display: none;">
+                <p>Chưa có món nào trong danh mục này.</p>
+            </div>
+        </main>
+
+        <!-- Right Sidebar: Shopping Cart -->
+        <aside class="cart-sidebar">
+            <div class="cart-header">
+                <h3>Giỏ Hàng Của Bạn</h3>
+                <span class="cart-count" id="cartItemCount">0</span>
+            </div>
+
+            <div class="cart-items" id="cartItemsList">
+                <div class="cart-empty">
+                    <img src="https://img.icons8.com/?size=100&id=9730&format=png&color=94a3b8" alt="Empty Cart">
+                    <p>Giỏ hàng đang trống.</p>
+                    <small>Hãy chọn vài món thơm ngon nhé!</small>
+                </div>
+                <!-- JS will inject cart items here -->
+            </div>
+
+            <div class="cart-footer">
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span id="subTotal">0đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Phí giao hàng:</span>
+                    <span>Miễn phí</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng Cộng:</span>
+                    <span id="grandTotal" class="price-highlight">0đ</span>
+                </div>
+
+                <div class="bonus-points-info">
+                    Đơn hàng này sẽ tích lũy <strong id="earnedPoints">+0</strong> điểm
+                </div>
+
+                <div id="checkoutMessage" class="message"></div>
+
+                <button class="btn-checkout" id="btnCheckout" onclick="handleCheckout()" disabled>
+                    <span class="btn-text">Thanh Toán Ngay</span>
+                    <span class="spinner"></span>
+                </button>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="toast">Đã thêm vào giỏ hàng!</div>
+
+    <script type="module" src="order.js"></script>
+</body>
+
+</html>

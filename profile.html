@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ Sơ Khách Hàng - TeaNgon</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #fbbf24;
+            --primary-dark: #f59e0b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+        }
+
+        /* Header */
+        .header {
+            background-color: #0f172a;
+            /* Dark top bar */
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #f8fafc;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .profile-card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--primary);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-info h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-info p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .points-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(251, 191, 36, 0.15);
+            color: #d97706;
+            padding: 0.5rem 1.2rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .form-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #f8fafc;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .input-group input:read-only {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #000;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.4);
+        }
+
+        .btn-logout {
+            background: #ef4444;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: block;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        .btn.loading .spinner {
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Loader Overlay while checking auth */
+        #authLoader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--background);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .loader-circle {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Full screen loader while checking auth state -->
+    <div id="authLoader">
+        <div class="loader-circle"></div>
+    </div>
+
+    <header class="header">
+        <a href="index.html" class="logo">
+            <img src="https://img.icons8.com/?size=100&id=uTj4mX8T3wB4&format=png&color=FBBF24" alt="Leaf"
+                style="width: 35px; height: 35px;">
+            <span><span style="color: #fbbf24;">Tea</span>ngon</span>
+        </a>
+        <div class="nav-actions">
+            <a href="order.html" class="nav-link">Thực Đơn (Menu)</a>
+            <a href="profile.html" class="nav-link active">Hồ Sơ</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="profile-card">
+
+            <div class="profile-header">
+                <div class="avatar" id="avatarInitial">T</div>
+                <div class="user-info">
+                    <h1 id="displayTitleName">--</h1>
+                    <p id="displayEmail">--</p>
+                    <div class="points-badge">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.984 3.984 0 01-3.143-1.5 3.984 3.984 0 01-6.714 0A3.989 3.989 0 012 14c0-.752.208-1.46.571-2.073a1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 2.323V3a1 1 0 011-1zm-5.824 9.192a2.993 2.993 0 000 4.616C4.484 16.55 5.216 17 6 17c.594 0 1.144-.173 1.62-.47l-.546-1.636a1 1 0 011.896-.632l.542 1.625A2.987 2.987 0 0010 16a2.987 2.987 0 00.488-.04l.542-1.625a1 1 0 011.896.632l-.546 1.636A2.996 2.996 0 0014 17c.784 0 1.516-.45 1.824-1.192a2.993 2.993 0 000-4.616l-1.531-4.782-4.293-1.717-4.293 1.717-1.531 4.782z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="displayPoints">0</span> Điểm thưởng
+                    </div>
+                </div>
+            </div>
+
+            <form id="profileForm" onsubmit="handleUpdateProfile(event)">
+                <div class="form-section">
+                    <h2>Thông Tin Cá Nhân & Giao Hàng</h2>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="input-group">
+                            <label>Họ và Tên</label>
+                            <input type="text" id="inputName" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Số điện thoại đặt hàng</label>
+                            <input type="tel" id="inputPhone" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Email đăng nhập (Không thể thay đổi)</label>
+                        <input type="email" id="inputEmail" readonly>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Địa chỉ nhận hàng mặc định</label>
+                        <textarea id="inputAddress" rows="3"
+                            placeholder="Ví dụ: 123 Đường Nhỏ, Quận Nhỏ, TP.HCM..."></textarea>
+                    </div>
+                </div>
+
+                <div id="updateMessage" class="message"></div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary" id="btnUpdate">
+                        <span class="btn-text">Lưu Thông Tin</span>
+                        <span class="spinner"></span>
+                    </button>
+                    <button type="button" class="btn btn-logout" onclick="handleLogout()">Đăng Xuất</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Integrate Firebase Logic in external js to keep clean -->
+    <script type="module" src="profile.js"></script>
+</body>
+
+</html>
