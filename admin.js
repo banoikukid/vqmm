@@ -72,6 +72,7 @@ function grantAdminAccess(user) {
     loadOrders();
     loadBanners();
     loadProducts();
+    loadCustomers();
 }
 
 function showAuthError(msg) {
