@@ -1,0 +1,41 @@
+{
+    "rules": {
+        "products": {
+            ".read": true,
+            ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+        },
+        "banners": {
+            ".read": true,
+            ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+        },
+        "spin_ips": {
+            ".read": true,
+            ".write": true
+        },
+        "winners": {
+            ".read": true,
+            ".write": true
+        },
+        "discount_codes": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+        },
+        "users": {
+            "$uid": {
+                ".read": "auth != null && auth.uid === $uid",
+                ".write": "auth != null && auth.uid === $uid"
+            }
+        },
+        "orders": {
+            ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+            "$orderId": {
+                ".read": "auth != null && (data.child('userId').val() === auth.uid || root.child('admins').child(auth.uid).exists())",
+                ".write": "auth != null && (!data.exists() || data.child('userId').val() === auth.uid || root.child('admins').child(auth.uid).exists())"
+            }
+        },
+        "admins": {
+            ".read": "auth != null",
+            ".write": "!data.exists()"
+        }
+    }
+}

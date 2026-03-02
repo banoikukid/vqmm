@@ -636,17 +636,39 @@
 </head>
 
 <body>
-    <!-- Admin Passcode Overlay -->
+    <!-- Admin Auth Overlay -->
     <div id="adminLoginOverlay">
-        <div class="login-box">
-            <h2>Đăng Nhập Quản Trị</h2>
-            <p>Vui lòng nhập mã PIN hệ thống.</p>
-            <input type="password" id="adminPin" class="pin-input" placeholder="Nhập mã PIN..." autocomplete="off"
-                autofocus>
-            <button type="button" class="login-btn-submit" onclick="checkAdminPin(event)"
-                ontouchstart="checkAdminPin(event)">XÁC NHẬN</button>
-            <p id="adminLoginError" class="login-error-msg">Mã PIN không đúng, thử lại!</p>
-            <p style="margin-top: 1.5rem; font-size: 0.85rem; color: #94a3b8;">Gợi ý: Nhập "admin" để vào demo</p>
+        <div class="login-box" style="max-width: 420px;">
+            <div style="display:flex;justify-content:center;margin-bottom:1rem;">
+                <img src="https://img.icons8.com/?size=100&id=113824&format=png&color=1e293b" width="60" height="60"
+                    alt="Admin Shield">
+            </div>
+            <h2>Bảo Mật Quản Trị</h2>
+            <p>Vui lòng đăng nhập bằng tài khoản Quản Trị Viên.</p>
+
+            <form id="adminLoginForm">
+                <div class="form-group" style="text-align: left; margin-bottom: 1rem;">
+                    <label style="font-size: 0.9rem; font-weight: 600; color: #64748b;">Email quản trị</label>
+                    <input type="email" id="adminEmail" class="pin-input"
+                        style="font-size: 1.05rem; letter-spacing: normal; text-align: left; margin-top: 0.5rem; padding: 0.8rem;"
+                        placeholder="admin@domain.com" required>
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
+                    <label style="font-size: 0.9rem; font-weight: 600; color: #64748b;">Mật khẩu</label>
+                    <input type="password" id="adminPassword" class="pin-input"
+                        style="font-size: 1.05rem; letter-spacing: normal; text-align: left; margin-top: 0.5rem; padding: 0.8rem;"
+                        placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="login-btn-submit" id="btnAdminLogin">
+                    ĐĂNG NHẬP VÀO HỆ THỐNG
+                </button>
+            </form>
+
+            <p id="adminLoginError" class="login-error-msg">Email hoặc mật khẩu không đúng!</p>
+            <div id="adminLoginLoader" style="display:none; margin-top: 1.5rem;">
+                <div class="loader-circle" style="width:24px;height:24px;border-width:3px;margin: 0 auto;"></div>
+                <p style="margin-top:0.5rem; color:#64748b;">Đang xác thực...</p>
+            </div>
         </div>
     </div>
 

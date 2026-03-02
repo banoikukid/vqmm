@@ -1,6 +1,7 @@
 // file: admin.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getDatabase, ref, get, set, remove, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAwwtUtwGqXCyvgM4DVRQUsabwrgzjfDyc",
@@ -15,6 +16,107 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+// ============================================
+// ADMIN AUTHENTICATION LOGIC
+// ============================================
+const adminLoginOverlay = document.getElementById('adminLoginOverlay');
+const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginError = document.getElementById('adminLoginError');
+const adminLoginLoader = document.getElementById('adminLoginLoader');
+const btnAdminLogin = document.getElementById('btnAdminLogin');
+
+let currentAdminUser = null;
+
+// Listen to Auth State
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        // Kiểm tra quyền Admin
+        try {
+            const adminsRef = ref(db, 'admins');
+            const snapshot = await get(adminsRef);
+
+            if (!snapshot.exists()) {
+                // Tình huống First-Run: Database chưa có ai làm Admin
+                // Tự động cấp quyền Admin Tối cao cho người đầu tiên đăng nhập web này
+                await set(ref(db, `admins/${user.uid}`), true);
+                console.log("Cấp quyền Admin đầu tiên thành công cho:", user.email);
+                grantAdminAccess(user);
+            } else {
+                // Đã có danh sách Admin, kiểm tra xem tài khoản này có nằm trong danh sách không
+                if (snapshot.hasChild(user.uid)) {
+                    grantAdminAccess(user);
+                } else {
+                    // Đăng nhập đúng Email/Pass nhưng KHÔNG có quyền Admin
+                    throw new Error("Tài khoản của bạn không có quyền Quản Trị Viên!");
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            await signOut(auth);
+            showAuthError(error.message || "Lỗi kiểm tra quyền hạn.");
+        }
+    } else {
+        // Chưa đăng nhập, hiện màn hình Login
+        adminLoginOverlay.style.display = 'flex';
+        currentAdminUser = null;
+    }
+});
+
+function grantAdminAccess(user) {
+    currentAdminUser = user;
+    adminLoginOverlay.style.display = 'none'; // Giấu màn hình đăng nhập
+    showToast(`Xin chào Quản trị viên: ${user.email}`);
+    // Load initial data
+    loadOrders();
+    loadBanners();
+    loadProducts();
+}
+
+function showAuthError(msg) {
+    adminLoginError.textContent = msg;
+    adminLoginError.style.display = 'block';
+    adminLoginLoader.style.display = 'none';
+    btnAdminLogin.style.display = 'block';
+}
+
+if (adminLoginForm) {
+    adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('adminEmail').value.trim();
+        const password = document.getElementById('adminPassword').value;
+
+        // UI Loading
+        adminLoginError.style.display = 'none';
+        btnAdminLogin.style.display = 'none';
+        adminLoginLoader.style.display = 'block';
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            // onAuthStateChanged sẽ tự động bắt sự kiện và kiểm tra quyền Admin
+        } catch (error) {
+            let msg = "Lỗi đăng nhập!";
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                msg = "Email hoặc Mật khẩu không chính xác!";
+            } else if (error.code === 'auth/too-many-requests') {
+                msg = "Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau!";
+            }
+            showAuthError(msg);
+        }
+    });
+}
+
+// Hàm Logout
+window.logoutAdmin = async function () {
+    try {
+        await signOut(auth);
+        window.location.reload();
+    } catch (error) {
+        showToast("Lỗi đăng xuất", true);
+    }
+}
+
 
 // Global state
 let currentBanners = [];
