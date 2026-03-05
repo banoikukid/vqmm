@@ -1,7 +1,7 @@
 // file: profile.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, update, onValue, query, orderByChild, equalTo, push, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, update, onValue, query, orderByChild, equalTo, push, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -86,6 +86,9 @@ onAuthStateChanged(auth, async (user) => {
         // Fetch User's Orders History
         loadUserOrders(currentUserId);
 
+        // Fetch User's Point History
+        loadUserPointHistory(currentUserId);
+
         // Fetch User's Vouchers
         loadUserVouchers(currentUserId);
 
@@ -167,6 +170,61 @@ function loadUserOrders(uid) {
 
         } else {
             orderHistoryContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Bạn chưa có đơn hàng nào.</p>';
+        }
+    });
+}
+
+function loadUserPointHistory(uid) {
+    const pointsRef = ref(database, `users/${uid}/point_history`);
+    onValue(pointsRef, (snapshot) => {
+        const historyContainer = document.getElementById('pointHistoryContainer');
+        historyContainer.innerHTML = '';
+
+        if (snapshot.exists()) {
+            const allData = snapshot.val();
+            // Convert to array and sort latest first
+            const pointLogs = Object.keys(allData)
+                .map(key => ({ id: key, ...allData[key] }))
+                .sort((a, b) => b.timestamp - a.timestamp); // Sort descending
+
+            if (pointLogs.length === 0) {
+                historyContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Bạn chưa có giao dịch điểm nào.</p>';
+                return;
+            }
+
+            pointLogs.forEach(log => {
+                const logCard = document.createElement('div');
+                logCard.style.cssText = `
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    padding: 1rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                `;
+
+                const dateObj = new Date(log.timestamp);
+                const dateStr = `${dateObj.getHours().toString().padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')} - ${dateObj.getDate()}/${dateObj.getMonth() + 1}/${dateObj.getFullYear()}`;
+
+                const isEarn = log.type === 'earn';
+                const signStr = isEarn ? '+' : '-';
+                const colorStr = isEarn ? '#10b981' : '#ef4444'; // Green for earn, Red for spend
+
+                logCard.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 0.3rem;">
+                        <span style="font-weight: 600; color: #1e293b; font-size: 0.95rem;">${log.reason || 'Cập nhật điểm'}</span>
+                        <span style="font-size: 0.8rem; color: #64748b;">${dateStr}</span>
+                    </div>
+                    <div style="font-weight: 800; font-size: 1.1rem; color: ${colorStr};">
+                        ${signStr}${log.amount}
+                    </div>
+                `;
+                historyContainer.appendChild(logCard);
+            });
+
+        } else {
+            historyContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem;">Bạn chưa có giao dịch điểm nào.</p>';
         }
     });
 }
@@ -312,7 +370,7 @@ window.handleLogout = async function () {
     }
 };
 
-window.redeemGift = async function (giftId, giftName, cost) {
+window.redeemGift = async function (giftId, giftName, cost, discountType, discountValue) {
     if (!currentUserId) return;
 
     // Retrieve latest user data to ensure accurate points
@@ -338,29 +396,35 @@ window.redeemGift = async function (giftId, giftName, cost) {
         });
         document.getElementById('displayPoints').textContent = newPoints; // Update UI immediately
 
-        // Create a special order for the admin
-        const ordersRef = ref(database, 'orders');
-        const newOrderRef = push(ordersRef);
+        // Log Point History
+        await push(ref(database, `users/${currentUserId}/point_history`), {
+            amount: cost,
+            reason: `Đổi quà: ${giftName}`,
+            type: "spend",
+            timestamp: serverTimestamp()
+        });
 
-        const orderData = {
-            userId: currentUserId,
-            customerName: userData.name || '',
-            customerPhone: userData.phone || '',
-            deliveryAddress: userData.address || '',
-            items: [{
-                id: giftId,
-                name: `[QUÀ TẶNG] ${giftName}`,
-                price: 0,
-                quantity: 1
-            }],
-            totalAmount: 0,
-            status: "pending",
+        // Generate Voucher
+        const voucherId = 'VQMM_' + Date.now().toString(36).toUpperCase();
+
+        // Grant Voucher to User Profile (Expires in 7 days)
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 7);
+        expiryDate.setHours(23, 59, 59, 999);
+
+        await set(ref(database, `users/${currentUserId}/vouchers/${voucherId}`), {
+            code: voucherId,
+            discount_type: discountType,
+            discount_value: discountValue,
+            label: `[Quà Đổi Điểm] ${giftName}`,
+            origin: 'point_exchange',
+            expiresAt: expiryDate.toISOString(),
+            status: 'active',
             createdAt: new Date().toISOString()
-        };
+        });
 
-        await set(newOrderRef, orderData);
-
-        showMessage(`Đổi quà thành công! Quán đã nhận được yêu cầu lấy "${giftName}" của bạn.`);
+        alert(`Đổi quà thành công! Bạn nhận được ${giftName}.\nHệ thống đang hướng bạn sang trang Đặt Món để dùng thẻ ngay...`);
+        window.location.href = `order.html?voucher=${voucherId}`;
     } catch (err) {
         console.error("Gift redemption error:", err);
         showMessage("Lỗi hệ thống khi đổi quà. Vui lòng thử lại.", true);

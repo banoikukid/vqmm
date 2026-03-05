@@ -364,8 +364,8 @@ function updateSummary(totalAmount) {
         discountRow.style.display = 'none';
     }
 
-    // Calculate points based on final total (10,000đ = 1 point)
-    const points = Math.floor(finalTotal / 10000);
+    // Calculate points based on final total (1,000đ = 1 point)
+    const points = Math.floor(finalTotal / 1000);
     earnedPointsEl.textContent = `+${points}`;
 }
 
@@ -519,7 +519,7 @@ window.handleCheckout = async function () {
         const subTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const discountAmount = discountState.applied ? discountState.value : 0;
         const totalAmount = Math.max(0, subTotal - discountAmount);
-        const earnedPoints = Math.floor(totalAmount / 10000);
+        const earnedPoints = Math.floor(totalAmount / 1000);
 
         // 1. Create Order Record
         const ordersRef = ref(database, 'orders');
@@ -540,6 +540,7 @@ window.handleCheckout = async function () {
             discountCode: discountState.applied ? discountState.code : null,
             discountAmount: discountAmount,
             totalAmount: totalAmount,
+            earnedPoints: earnedPoints,
             status: "pending",
             createdAt: new Date().toISOString()
         };
@@ -558,15 +559,10 @@ window.handleCheckout = async function () {
             }
         }
 
-        // 2. Add Points to User Profile immediately on checkout
-        const currentPoints = parseInt(userData.points) || 0;
-        const newPointsList = currentPoints + earnedPoints;
-
-        await set(ref(database, `users/${currentUser.uid}/points`), newPointsList);
-
+        // Points are now granted ONLY when admin marks order as completed
         // Update local state and UI
-        userData.points = newPointsList;
-        userPointsDisplay.textContent = newPointsList;
+        userData.points = parseInt(userData.points) || 0; // retain existing
+        userPointsDisplay.textContent = userData.points;
 
         // 4. Success Feedback
         cart = [];

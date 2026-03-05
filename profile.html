@@ -475,10 +475,11 @@
 
             <!-- Tab Navigation -->
             <div class="tab-menu">
-                <button class="tab-btn active" onclick="switchTab('tab-info', this)">Thông Tin Của Tôi</button>
+                <button class="tab-btn active" onclick="switchTab('tab-info', this)">Thông Tin</button>
+                <button class="tab-btn" onclick="switchTab('tab-points', this)">Tích Điểm & Đổi Quà</button>
                 <button class="tab-btn" onclick="switchTab('tab-orders', this)">Lịch Sử Đặt Món</button>
                 <button class="tab-btn" onclick="switchTab('tab-vouchers', this)">
-                    Voucher & Đổi Điểm
+                    Kho Voucher
                     <span class="tab-badge" id="voucherTabBadge">0</span>
                 </button>
             </div>
@@ -524,6 +525,57 @@
                 </form>
             </div>
 
+            <!-- Tab 1.5: Point History & Rewards -->
+            <div id="tab-points" class="tab-content">
+                <!-- Rewards Hub: Redeem Points -->
+                <div class="form-section">
+                    <h2>Đổi Điểm Lấy Quà (Rewards)</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Đổi số điểm trân châu bạn đang có để nhận
+                        những phần quà miễn phí cực hấp dẫn từ TeaRus!</p>
+
+                    <div class="gift-grid">
+                        <div class="gift-card">
+                            <div class="gift-image">🎫</div>
+                            <div class="gift-name">Voucher Giảm 5K</div>
+                            <div class="gift-cost">50 Điểm</div>
+                            <button class="btn-redeem"
+                                onclick="window.redeemGift('voucher5k', 'Voucher Giảm 5K', 50, 'fixed', 5000)">Đổi
+                                Quà</button>
+                        </div>
+                        <div class="gift-card">
+                            <div class="gift-image">🎟️</div>
+                            <div class="gift-name">Voucher Giảm 10K</div>
+                            <div class="gift-cost">100 Điểm</div>
+                            <button class="btn-redeem"
+                                onclick="window.redeemGift('voucher10k', 'Voucher Giảm 10K', 100, 'fixed', 10000)">Đổi
+                                Quà</button>
+                        </div>
+                        <div class="gift-card">
+                            <div class="gift-image">🧋</div>
+                            <div class="gift-name" style="margin-bottom: 0.2rem;">1 Ly Trà Sữa MIỄN PHÍ</div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;">(Trị giá tối đa 20K)
+                            </div>
+                            <div class="gift-cost">200 Điểm</div>
+                            <button class="btn-redeem"
+                                onclick="window.redeemGift('voucher20k', '1 Ly Trà Sữa MIỄN PHÍ (Trị giá tối đa 20K)', 200, 'fixed', 20000)">Đổi
+                                Quà</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Point History -->
+                <div class="form-section"
+                    style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">
+                    <h2>Lịch Sử Biến Động Điểm Thưởng</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">Hệ thống ghi nhận
+                        điểm tích lũy của bạn qua các giao dịch Mua Hàng và tham gia Vòng Quay May Mắn.</p>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;" id="pointHistoryContainer">
+                        <p style="text-align: center; color: var(--text-muted); padding: 1rem;">Đang tải lịch sử điểm...
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab 2: Orders -->
             <div id="tab-orders" class="tab-content">
                 <div class="form-section">
@@ -536,43 +588,11 @@
 
             <!-- Tab 3: Vouchers -->
             <div id="tab-vouchers" class="tab-content">
-                <!-- Rewards Hub: Redeem Points -->
-                <div class="form-section">
-                    <h2>Đổi Điểm Lấy Quà (Rewards)</h2>
-                    <p style="color: var(--text-muted); font-size: 0.95rem;">Đổi số điểm trân châu bạn đang có để nhận
-                        những phần quà miễn phí cực hấp dẫn từ TeaRus!</p>
-
-                    <div class="gift-grid">
-                        <div class="gift-card">
-                            <div class="gift-image">🎫</div>
-                            <div class="gift-name">Voucher Giảm 20K</div>
-                            <div class="gift-cost">200 Điểm</div>
-                            <button class="btn-redeem"
-                                onclick="window.redeemGift('voucher20k', 'Voucher Giảm 20K', 200)">Đổi Quà</button>
-                        </div>
-                        <div class="gift-card">
-                            <div class="gift-image">🧋</div>
-                            <div class="gift-name">1 Ly Trà Sữa MIỄN PHÍ</div>
-                            <div class="gift-cost">400 Điểm</div>
-                            <button class="btn-redeem"
-                                onclick="window.redeemGift('free_milktea', '1 Ly Trà Sữa Bất Kỳ', 400)">Đổi Quà</button>
-                        </div>
-                        <div class="gift-card">
-                            <div class="gift-image">🧸</div>
-                            <div class="gift-name">Gấu Bông TeaRus</div>
-                            <div class="gift-cost">1000 Điểm</div>
-                            <button class="btn-redeem"
-                                onclick="window.redeemGift('plushie', 'Gấu Bông Độc Quyền', 1000)">Đổi Quà</button>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Voucher Hub -->
-                <div class="form-section"
-                    style="margin-top: 3rem; border-top: 1px solid var(--border); padding-top: 2rem;">
-                    <h2>Kho Voucher (Từ Vòng Quay)</h2>
+                <div class="form-section">
+                    <h2>Kho Voucher Của Bạn</h2>
                     <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">Sử dụng mã Voucher
-                        này ở trang Đặt Hàng để được giảm giá. Voucher có hạn sử dụng 1 ngày.</p>
+                        này ở trang Đặt Hàng để được giảm giá.</p>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;"
                         id="vouchersContainer">

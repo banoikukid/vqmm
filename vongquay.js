@@ -537,6 +537,14 @@ if (btnVerifyChatbotCode) {
                     await runTransaction(userRef, (currentPoints) => {
                         return (currentPoints || 0) + earnedPointsVal;
                     });
+
+                    // Log Point History
+                    await push(ref(database, `users/${currentUserId}/point_history`), {
+                        amount: earnedPointsVal,
+                        reason: `Thưởng Vòng Quay (Mã phiên: ${voucherId})`,
+                        type: "earn",
+                        timestamp: serverTimestamp()
+                    });
                 } else {
                     // Grant Voucher to User Profile (Expires end of today)
                     const endOfDay = new Date();

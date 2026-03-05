@@ -1,6 +1,6 @@
 // file: admin.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, onValue, onChildAdded } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, onValue, onChildAdded, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -322,10 +322,35 @@ function renderOrders() {
 
 // Global scope for onclick bindings
 window.markOrderComplete = async function (orderId) {
-    if (!confirm("Bạn xác nhận đã hoàn thành và giao đơn này?")) return;
+    if (!confirm("Bạn xác nhận đã hoàn thành và giao đơn này? Khách hàng sẽ được cộng điểm tích lũy ngay sau thao tác này.")) return;
     try {
+        const orderRef = ref(db, `orders/${orderId}`);
+        const orderSnap = await get(orderRef);
+
+        if (orderSnap.exists()) {
+            const orderData = orderSnap.val();
+
+            // Only grant points if the order was just pending and not yet completed
+            if (orderData.status !== 'completed' && orderData.earnedPoints > 0 && orderData.userId) {
+                const userPointsRef = ref(db, `users/${orderData.userId}/points`);
+                const userPointsSnap = await get(userPointsRef);
+                const currentPoints = parseInt(userPointsSnap.val()) || 0;
+
+                // Add points
+                await set(userPointsRef, currentPoints + orderData.earnedPoints);
+
+                // Log history
+                await push(ref(db, `users/${orderData.userId}/point_history`), {
+                    amount: orderData.earnedPoints,
+                    reason: `Mua sắm tích điểm (Đơn hàng: ${orderId})`,
+                    type: "earn",
+                    timestamp: serverTimestamp()
+                });
+            }
+        }
+
         await set(ref(db, `orders/${orderId}/status`), 'completed');
-        showToast("Đã cập nhật trạng thái đơn hàng!");
+        showToast("Đã hoàn thành đơn hàng và cộng điểm cho khách!");
     } catch (e) {
         console.error(e);
         showToast("Lỗi khi cập nhật trạng thái.", true);
