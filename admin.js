@@ -553,6 +553,7 @@ function renderBanners() {
                         <input type="text" class="edit-btn" value="${b.buttonText}" style="margin-bottom: 0;">
                     </div>
                 </div>
+                <div><small>Link Liên Kết Nút Bấm</small><input type="text" class="edit-link" value="${b.linkUrl || ''}" placeholder="Nhập link chuyển trang, VD: order.html"></div>
                 <div><small>Tiêu đề (Cho phép HTML)</small><input type="text" class="edit-headline" value="${safeHeadline}"></div>
                 <div><small>Mô tả nhỏ</small><input type="text" class="edit-sub" value="${safeSub}"></div>
                 
@@ -633,6 +634,8 @@ function syncCurrentValues() {
         currentBanners[idx].headline = item.querySelector('.edit-headline').value;
         currentBanners[idx].subheadline = item.querySelector('.edit-sub').value;
         currentBanners[idx].buttonText = item.querySelector('.edit-btn').value;
+        const linkEl = item.querySelector('.edit-link');
+        if (linkEl) currentBanners[idx].linkUrl = linkEl.value;
     });
 }
 
@@ -766,6 +769,7 @@ window.checkAdminPin = function (e) {
         loadProducts();
         loadBanners();
         loadCustomers();
+        loadChatbotCode();
 
         showToast("Đăng nhập Admin thành công!");
     } else {
@@ -804,8 +808,30 @@ if (mobileMenu && navLinks) {
 }
 
 // ============================================
-// DISCOUNT CODE MANAGEMENT
+// CHATBOT CODE & DISCOUNT CODE MANAGEMENT
 // ============================================
+
+function loadChatbotCode() {
+    onValue(ref(db, 'config/chatbot_code'), (snapshot) => {
+        const input = document.getElementById('chatbotCodeInput');
+        if (input) {
+            input.value = snapshot.exists() ? snapshot.val() : '';
+        }
+    });
+}
+
+const btnSaveChatbotCode = document.getElementById('btnSaveChatbotCode');
+if (btnSaveChatbotCode) {
+    btnSaveChatbotCode.addEventListener('click', async () => {
+        const code = document.getElementById('chatbotCodeInput').value.trim().toUpperCase();
+        try {
+            await set(ref(db, 'config/chatbot_code'), code);
+            showToast("Đã lưu Mã Chatbot thành công!");
+        } catch (error) {
+            showToast("Lỗi cấu hình mã", true);
+        }
+    });
+}
 
 function generateCodeString(length = 8) {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing chars

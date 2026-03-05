@@ -20,19 +20,22 @@ const defaultBanners = [
         imageUrl: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?q=80&w=2070&auto=format&fit=crop",
         headline: "<span class='highlight-blue'>FUN FRESH</span><br>FRIENDLY",
         subheadline: "Thưởng thức trà sữa Matcha tươi mát siêu cuốn, mang đến niềm vui và năng lượng tích cực cho cả ngày dài!",
-        buttonText: "Đặt Món Ngay"
+        buttonText: "Đặt Món Ngay",
+        linkUrl: "order.html"
     },
     {
         imageUrl: "https://images.unsplash.com/photo-1576092762791-dd9e22205948?q=80&w=2070&auto=format&fit=crop",
         headline: "<span class='highlight-blue'>HƯƠNG VỊ</span><br>NGUYÊN BẢN",
         subheadline: "Sự kết hợp hoàn hảo giữa trà xanh nguyên lá thượng hạng và trân châu dai giòn sần sật.",
-        buttonText: "Xem Menu"
+        buttonText: "Xem Menu",
+        linkUrl: "order.html"
     },
     {
         imageUrl: "https://images.unsplash.com/photo-1598515089851-dceb2929de28?q=80&w=2070&auto=format&fit=crop",
         headline: "<span class='highlight-blue'>FREE ƯU ĐÃI</span><br>CHO THÀNH VIÊN",
         subheadline: "Trở thành hội viên TeaRus ngay hôm nay để nhận được hàng ngàn voucher và dễ dàng đổi điểm lấy quà siêu to.",
-        buttonText: "Đăng Ký Khách Hàng"
+        buttonText: "Đăng Ký Khách Hàng",
+        linkUrl: "login.html"
     }
 ];
 
@@ -76,7 +79,7 @@ function renderBanners(banners) {
                 <div class="slide-text">
                     <h2 class="slide-headline dark-text">${b.headline}</h2>
                     <p class="slide-subheadline dark-text">${b.subheadline}</p>
-                    <button class="slide-btn glow-btn">${b.buttonText}</button>
+                    <a href="${b.linkUrl || '#'}" class="slide-btn glow-btn" style="text-decoration: none; display: inline-block;">${b.buttonText}</a>
                 </div>
             </div>
         `;

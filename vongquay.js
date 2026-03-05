@@ -203,42 +203,166 @@ function setupLiveListeners() {
     });
 }
 
-// 4. Check Daily (Tạm thời không giới hạn để Test)
+// 4. Check Daily
 async function checkDailyLimit() {
-    updateConnectionStatus("Bạn được quay không giới hạn (Mở để người quản trị test)!");
-    btnSpin.disabled = false;
-    btnSpin.textContent = "QUAY";
+    if (!currentUserId) return;
+    const today = getTodayString();
+    const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
+
+    onValue(historyRef, (snap) => {
+        let freeSpins = 1;
+        let bonusSpins = 0;
+        let usedSpins = 0;
+
+        if (snap.exists()) {
+            const data = snap.val();
+            if (data.bonusClaimed) {
+                bonusSpins = 2; // claimed chatbot code = 2 extra spins
+            }
+            if (data.spinCount) {
+                usedSpins = data.spinCount;
+            }
+        }
+
+        const totalSpins = freeSpins + bonusSpins;
+        const remainingSpins = totalSpins - usedSpins;
+
+        if (remainingSpins > 0) {
+            btnSpin.disabled = false;
+            btnSpin.textContent = `QUAY (Còn ${remainingSpins} Lượt)`;
+            btnSpin.style.background = '';
+
+            // Check exactly 1 pool count msg
+            updateConnectionStatus("Nhấn QUAY để thử vận may hôm nay!", "info");
+        } else {
+            btnSpin.disabled = false; // still allow clicking to trigger popup
+            btnSpin.textContent = "QUAY (HẾT LƯỢT)";
+            btnSpin.style.background = '#e4e4e7';
+            updateConnectionStatus("Bạn đã hết lượt quay ngày hôm nay.", "error");
+        }
+    });
 }
+
+// Hunt Spins Banner Handle
+document.getElementById('btnHuntSpins')?.addEventListener('click', () => {
+    showOutOfSpinsModal();
+});
+
+function showOutOfSpinsModal() {
+    const codeEl = document.getElementById('fbShareCode');
+    const randomCode = 'TEARUS-' + Math.floor(100 + Math.random() * 900);
+    if (codeEl) codeEl.textContent = randomCode;
+    document.getElementById('outOfSpinsModal').classList.remove('hidden');
+    document.getElementById('chatbotVerifyMsg').style.display = 'none';
+    document.getElementById('chatbotCodeInput').value = '';
+}
+
+// Copy Code Button
+document.getElementById('btnCopyFbCode')?.addEventListener('click', () => {
+    const code = document.getElementById('fbShareCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        alert("Đã copy: " + code);
+        window.open('https://www.facebook.com/trasuatearus', '_blank');
+    }).catch(err => {
+        console.error('Failed to copy', err);
+    });
+});
+
+// Verify Chatbot Code
+document.getElementById('btnVerifyChatbotCode')?.addEventListener('click', async () => {
+    if (!currentUserId) return;
+    const inputCode = document.getElementById('chatbotCodeInput').value.trim().toUpperCase();
+    const msgEl = document.getElementById('chatbotVerifyMsg');
+
+    if (!inputCode) {
+        msgEl.textContent = "Vui lòng nhập mã từ Chatbot!";
+        msgEl.style.color = "#ef4444";
+        msgEl.style.display = "block";
+        return;
+    }
+
+    try {
+        const configSnap = await get(ref(database, 'config/chatbot_code'));
+        const secretCode = configSnap.exists() ? configSnap.val() : '';
+
+        if (inputCode === secretCode && secretCode !== '') {
+            const today = getTodayString();
+            const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
+            const hisSnap = await get(historyRef);
+
+            if (hisSnap.exists() && hisSnap.val().bonusClaimed) {
+                msgEl.textContent = "Bạn đã dùng mã này trong hôm nay rồi!";
+                msgEl.style.color = "#ef4444";
+                msgEl.style.display = "block";
+                return;
+            }
+
+            // Claim bonus!
+            await update(historyRef, {
+                bonusClaimed: true,
+                bonusTimestamp: serverTimestamp()
+            });
+
+            msgEl.textContent = "Chúc mừng! Bạn được cộng thêm 2 lượt quay!";
+            msgEl.style.color = "#10b981";
+            msgEl.style.display = "block";
+
+            setTimeout(() => {
+                document.getElementById('outOfSpinsModal').classList.add('hidden');
+            }, 1500);
+
+        } else {
+            msgEl.textContent = "Mã Chatbot không chính xác!";
+            msgEl.style.color = "#ef4444";
+            msgEl.style.display = "block";
+        }
+    } catch (e) {
+        console.error("Lỗi verify mã", e);
+    }
+});
+
 
 // 5. Spin Logic
 btnSpin.addEventListener('click', async () => {
     if (isSpinning || !currentUserId) return;
+
+    // ----- Check Spin Limits First ------
+    const today = getTodayString();
+    const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
+    const hisSnap = await get(historyRef);
+
+    let freeSpins = 1;
+    let bonusSpins = 0;
+    let usedSpins = 0;
+
+    if (hisSnap.exists()) {
+        const data = hisSnap.val();
+        if (data.bonusClaimed) bonusSpins = 2;
+        if (data.spinCount) usedSpins = data.spinCount;
+    }
+
+    const totalSpins = freeSpins + bonusSpins;
+    const remainingSpins = totalSpins - usedSpins;
+
+    if (remainingSpins <= 0) {
+        showOutOfSpinsModal();
+        return;
+    }
+    // ------------------------------------
+
     isSpinning = true;
     btnSpin.disabled = true;
     btnSpin.style.background = '#e4e4e7';
 
-    updateConnectionStatus("Đang xem xét kết quả...");
+    updateConnectionStatus("Đang quay...");
 
-    // Probabilities (Điều chỉnh để Test)
-    // 30% special, 30% normal, 40% empty
+    // Probabilities
     const rand = Math.random();
     let intendedPrize = 'empty';
     if (rand <= 0.30) intendedPrize = 'special';
     else if (rand <= 0.60) intendedPrize = 'normal';
 
-    const today = getTodayString();
-
     try {
-        // Run transaction on Pool AND History at the same time to prevent race conditions
-        // BUT firebase database requires transactions on a single node path.
-        // We will lock the result by just verifying against history first quickly.
-
-        // BỎ GIỚI HẠN: Kiểm tra history để test
-        // const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
-        // const hisSnap = await get(historyRef);
-        // if(hisSnap.exists()) {
-        //     throw new Error("ALREADY_SPUN");
-        // }
 
         let actualPrize = 'empty';
         let prizeLabel = '';
@@ -276,12 +400,13 @@ btnSpin.addEventListener('click', async () => {
             }
         }
 
-        // Save history to prevent double spin (Ghi đè - Bypass for unlimited)
-        const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
-        await set(historyRef, {
-            timestamp: serverTimestamp(),
-            prize: actualPrize
-        });
+        // Save history (increment spins)
+        let currentSpinHistory = hisSnap.exists() ? hisSnap.val() : {};
+        if (!currentSpinHistory.spinCount) currentSpinHistory.spinCount = 0;
+        currentSpinHistory.spinCount += 1;
+        currentSpinHistory.lastSpinTimestamp = serverTimestamp();
+
+        await update(historyRef, currentSpinHistory);
 
         // Generate Voucher ID first
         const voucherId = 'VQMM_' + Date.now().toString(36).toUpperCase();
@@ -379,12 +504,7 @@ function animateWheelTarget(actualPrize, prizeLabel, voucherId) {
     setTimeout(() => {
         isSpinning = false;
         showPrizeResult(actualPrize, prizeLabel, voucherId);
-
-        // Allow playing again for testing
-        btnSpin.disabled = false;
-        btnSpin.textContent = "TIẾP TỤC QUAY";
-        btnSpin.style.background = '';
-        updateConnectionStatus("Bạn có thể quay tiếp!", "info");
+        // Do not auto re-enable, wait for listener to check limit naturally
     }, 5100);
 }
 
@@ -426,8 +546,8 @@ btnResetTest.addEventListener('click', async () => {
     if (!confirm("Hệ thống sẽ xóa TẤT CẢ danh sách trúng thưởng, lịch sử của bạn, và khôi phục mốc Voucher (1 Đặc Biệt, 10 Thường) để test lại từ đầu. Đồng ý?")) return;
     try {
         const today = getTodayString();
-        // Xóa lịch sử quay của bản thân
-        await set(ref(database, `lucky_wheel/history/${today}/${currentUserId}`), null);
+        // Xóa lịch sử quay của bản thân (Mở lại 1 lượt miễn phí)
+        await set(ref(database, `lucky_wheel/history/${today}/${currentUserId}/spinCount`), 0);
 
         // Xóa danh sách trúng thưởng public
         await set(ref(database, 'lucky_wheel/winners'), null);

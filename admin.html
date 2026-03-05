@@ -946,7 +946,25 @@
 
         <!-- TAB: DISCOUNT CODES -->
         <section id="tab-discounts" class="tab-content">
-            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">🏷️ Tạo Mã Giảm Giá</h1>
+            <h1 style="font-size: 1.8rem; color: #0f172a; margin-bottom: 1.5rem;">🏷️ Khuyến Mãi & Trọn Gói</h1>
+
+            <!-- NEW: Chatbot Code Config -->
+            <div
+                style="background: var(--surface); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px solid var(--border);">
+                <h3
+                    style="margin-bottom: 1rem; color: #1e3a8a; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>💬</span> Cấu Hình Mật Khẩu Khuyến Mãi (Chatbot Fanpage)
+                </h3>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1rem;">
+                    Khách hàng khi nhập mã này tại vòng quay sẽ được hệ thống tặng tự động 2 lượt quay miễn phí vào Tài
+                    khoản của họ. Bạn có thể tự do thay đổi mã này hàng ngày.
+                </p>
+                <div style="display: flex; gap: 1rem;">
+                    <input type="text" id="chatbotCodeInput" placeholder="VD: THUONG2LUOT"
+                        style="flex: 1; text-transform: uppercase;">
+                    <button class="btn btn-primary" id="btnSaveChatbotCode">Lưu Mã Cấu Hình</button>
+                </div>
+            </div>
 
             <div class="card" style="margin-bottom: 1.5rem;">
                 <div class="card-header">
