@@ -17,10 +17,10 @@
     <nav class="navbar">
         <div class="nav-container">
             <a href="#" class="logo" style="display: flex; align-items: center; text-decoration: none;">
-                <img src="logo-searus.jpg" alt="Searus Logo"
+                <img src="logo-searus.jpg" alt="TeaRus Logo"
                     style="height: 50px; width: auto; max-width: 150px; object-fit: contain;">
                 <span style="font-size: 1.5rem; font-weight: 800; margin-left: 0.5rem; color: #0f172a;"><span
-                        style="color: #0ea5e9;">Sea</span>Rus</span>
+                        style="color: #0ea5e9;">Tea</span>Rus</span>
             </a>
 
             <!-- Hamburger Icon -->
@@ -35,7 +35,7 @@
                 <li><a href="login.html">ĐĂNG KÝ THÀNH VIÊN</a></li>
                 <li><a href="order.html">ĐẶT MÓN</a></li>
                 <li><a href="admin.html" target="_blank" style="color: #ef4444; font-weight: 800;">[ ADMIN ]</a></li>
-                <li><a href="#vong-quay-section">VÒNG QUAY MAY MẮN</a></li>
+                <li><a href="vongquay.html" style="color: #fbbf24; font-weight: 800;">VÒNG QUAY MAY MẮN</a></li>
                 <li><a href="#lien-he-section">THÔNG TIN LIÊN HỆ</a></li>
                 <li><a href="login.html" class="cart-icon" title="Đăng nhập để xem Giỏ Hàng">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"
@@ -67,7 +67,7 @@
         <div class="hot-items-container">
             <div class="section-title">
                 <h2>Top 4 Món Tủ Bán Chạy 🔥</h2>
-                <p>Thưởng thức những hương vị được yêu thích nhất tại TeaNgon</p>
+                <p>Thưởng thức những hương vị được yêu thích nhất tại TeaRus</p>
             </div>
             <div class="hot-grid" id="hotItemsGrid">
                 <!-- Data will be injected from Firebase via script.js -->
@@ -76,77 +76,6 @@
             </div>
         </div>
     </section>
-
-    <div class="app-container" id="vong-quay-section">
-
-        <div class="left-panel">
-            <div class="header">
-                <h1>Vòng Quay May Mắn <span class="sparkle">✨</span></h1>
-                <p>Nhập thông tin của bạn để thử vận may!</p>
-            </div>
-
-            <div class="form-container">
-                <div class="input-group">
-                    <label for="name">Họ và tên</label>
-                    <input type="text" id="name" placeholder="VD: Nguyễn Văn A" autocomplete="off">
-                </div>
-
-                <div class="input-group">
-                    <label for="phone">Số điện thoại</label>
-                    <input type="tel" id="phone" placeholder="VD: 0912345678" autocomplete="off">
-                </div>
-
-                <div id="message" class="message hidden"></div>
-            </div>
-
-            <div class="winners-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="margin-bottom: 0;">Danh Sách Trúng Thưởng 🏆</h2>
-                    <button id="resetDataBtn"
-                        style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Xóa
-                        dữ liệu (Test)</button>
-                </div>
-                <div class="table-container">
-                    <table id="winnersTable">
-                        <thead>
-                            <tr>
-                                <th>Thời gian</th>
-                                <th>Họ tên</th>
-                                <th>Số ĐT (Ẩn)</th>
-                                <th>Giải thưởng</th>
-                            </tr>
-                        </thead>
-                        <tbody id="winnersBody">
-                            <!-- Winners will be populated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="right-panel">
-            <div class="wheel-wrapper">
-                <div class="pointer">▼</div>
-                <div class="wheel-container">
-                    <canvas id="wheel" width="500" height="500"></canvas>
-                </div>
-                <button id="spinBtn" class="spin-btn">QUAY NGAY</button>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Modal for Result -->
-    <div id="resultModal" class="modal hidden">
-        <div class="modal-content">
-            <h2 id="modalTitle">Chúc mừng!</h2>
-            <p id="modalDesc">Bạn đã trúng giải.</p>
-            <button id="closeModal">Tuyệt vời</button>
-        </div>
-    </div>
-
-    <!-- Audio Effect -->
-    <audio id="winSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
@@ -193,10 +122,10 @@
             <div class="footer-brand">
                 <a href="#" class="logo"
                     style="display: flex; align-items: center; text-decoration: none; margin-bottom: 1rem;">
-                    <img src="logo-searus.jpg" alt="Searus Logo"
+                    <img src="logo-searus.jpg" alt="TeaRus Logo"
                         style="height: 45px; width: auto; object-fit: contain;">
                     <span style="font-size: 1.5rem; font-weight: 800; margin-left: 0.5rem; color: #0f172a;"><span
-                            style="color: #0ea5e9;">Sea</span>Rus</span>
+                            style="color: #0ea5e9;">Tea</span>Rus</span>
                 </a>
                 <p>Cung cấp nguyên liệu, thiết bị và giải pháp toàn diện cho quán trà sữa, cafe của bạn.</p>
                 <div class="social-links">
@@ -273,7 +202,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 TeaNgon. Tất cả các quyền được bảo lưu.</p>
+            <p>&copy; 2026 TeaRus. Tất cả các quyền được bảo lưu.</p>
         </div>
     </footer>
 

@@ -1,7 +1,7 @@
 // file: order.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, push, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, push, set, onValue } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAwwtUtwGqXCyvgM4DVRQUsabwrgzjfDyc",
@@ -24,7 +24,7 @@ let userData = null;
 let allProducts = [];
 let cart = [];
 let currentCategory = 'all';
-let discountState = { applied: false, code: null, value: 0, label: '' };
+let discountState = { applied: false, code: null, value: 0, label: '', isPersonalVoucher: false };
 
 // ===== TELEGRAM BOT CONFIG =====
 // 1. Tạo bot qua @BotFather trên Telegram -> lấy token
@@ -115,8 +115,51 @@ onAuthStateChanged(auth, async (user) => {
             console.error("Error fetching user data:", error);
         }
 
+        // Live Listener for User Vouchers (Auto-clean & Badge Count)
+        const voucherBadgeDisplay = document.getElementById('voucherBadgeDisplay');
+        onValue(ref(database, `users/${user.uid}/vouchers`), async (snapshot) => {
+            if (snapshot.exists()) {
+                const userVouchers = snapshot.val();
+                let activeCount = 0;
+                const now = new Date();
+
+                for (const [vId, vData] of Object.entries(userVouchers)) {
+                    if (vData.status === 'active') {
+                        const expiryDate = new Date(vData.expiresAt);
+                        if (now > expiryDate) {
+                            // Expired -> Auto self-delete
+                            await set(ref(database, `users/${user.uid}/vouchers/${vId}`), null);
+                        } else {
+                            activeCount++;
+                        }
+                    }
+                }
+
+                if (activeCount > 0) {
+                    voucherBadgeDisplay.style.display = 'inline-flex';
+                    voucherBadgeDisplay.textContent = `🎟️ ${activeCount} Voucher`;
+                } else {
+                    voucherBadgeDisplay.style.display = 'none';
+                }
+            } else {
+                if (voucherBadgeDisplay) voucherBadgeDisplay.style.display = 'none';
+            }
+        });
+
         // Fetch Products
         await fetchProducts();
+
+        // Check for Auto-Apply Voucher from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoVoucher = urlParams.get('voucher');
+        if (autoVoucher) {
+            const codeInput = document.getElementById('discountCodeInput');
+            if (codeInput) {
+                codeInput.value = autoVoucher;
+                // Add a small delay for DOM render before applying
+                setTimeout(() => window.applyDiscount(), 500);
+            }
+        }
 
         authLoader.style.display = 'none';
     } else {
@@ -361,31 +404,48 @@ window.applyDiscount = async function () {
     }
 
     try {
-        const snapshot = await get(ref(database, `discount_codes/${code}`));
+        let snapshot = await get(ref(database, `discount_codes/${code}`));
+        let isPersonalVoucher = false;
+
         if (!snapshot.exists()) {
-            showDiscountMsg('Mã giảm giá không tồn tại!');
-            return;
+            // Check personal vouchers
+            snapshot = await get(ref(database, `users/${currentUser.uid}/vouchers/${code}`));
+            if (!snapshot.exists()) {
+                showDiscountMsg('Mã giảm giá không tồn tại!');
+                return;
+            }
+            isPersonalVoucher = true;
         }
 
         const codeData = snapshot.val();
         const todayStr = new Date().toLocaleDateString('vi-VN');
 
-        // Validate phone
-        if (codeData.phone && userData.phone && codeData.phone !== userData.phone) {
-            showDiscountMsg('Mã này không dành cho tài khoản của bạn!');
-            return;
-        }
-
-        // Validate date
-        if (codeData.expires_date && codeData.expires_date !== todayStr) {
-            showDiscountMsg('Mã giảm giá đã hết hạn sử dụng!');
-            return;
-        }
-
-        // Validate status
-        if (codeData.status !== 'unused') {
-            showDiscountMsg('Mã giảm giá này đã được sử dụng rồi!');
-            return;
+        if (!isPersonalVoucher) {
+            // Validate global discount code
+            if (codeData.phone && userData.phone && codeData.phone !== userData.phone) {
+                showDiscountMsg('Mã này không dành cho tài khoản của bạn!');
+                return;
+            }
+            if (codeData.expires_date && codeData.expires_date !== todayStr) {
+                showDiscountMsg('Mã giảm giá đã hết hạn sử dụng!');
+                return;
+            }
+            if (codeData.status !== 'unused') {
+                showDiscountMsg('Mã giảm giá này đã được sử dụng rồi!');
+                return;
+            }
+        } else {
+            // Validate personal voucher
+            const now = new Date();
+            const expiresAt = new Date(codeData.expiresAt);
+            if (now > expiresAt) {
+                showDiscountMsg('Voucher của bạn đã hết hạn sử dụng!');
+                return;
+            }
+            if (codeData.status !== 'active') {
+                showDiscountMsg('Voucher này đã được sử dụng hoặc không hợp lệ!');
+                return;
+            }
         }
 
         // All valid – apply discount
@@ -414,7 +474,8 @@ window.applyDiscount = async function () {
             code: code,
             value: finalDiscountValue,
             label: codeData.label || code,
-            firebaseKey: code
+            firebaseKey: code,
+            isPersonalVoucher: isPersonalVoucher
         };
 
         // Re-render cart to update totals
@@ -490,7 +551,11 @@ window.handleCheckout = async function () {
 
         // Mark discount code as 'used' in Firebase
         if (discountState.applied && discountState.firebaseKey) {
-            await set(ref(database, `discount_codes/${discountState.firebaseKey}/status`), 'used');
+            if (discountState.isPersonalVoucher) {
+                await set(ref(database, `users/${currentUser.uid}/vouchers/${discountState.firebaseKey}/status`), 'used');
+            } else {
+                await set(ref(database, `discount_codes/${discountState.firebaseKey}/status`), 'used');
+            }
         }
 
         // 2. Add Points to User Profile immediately on checkout
@@ -505,7 +570,7 @@ window.handleCheckout = async function () {
 
         // 4. Success Feedback
         cart = [];
-        discountState = { applied: false, code: null, value: 0, label: '' };
+        discountState = { applied: false, code: null, value: 0, label: '', isPersonalVoucher: false };
         const codeInput = document.getElementById('discountCodeInput');
         if (codeInput) { codeInput.value = ''; codeInput.disabled = false; }
         const btnApply = document.getElementById('btnApplyDiscount');

@@ -86,6 +86,9 @@ onAuthStateChanged(auth, async (user) => {
         // Fetch User's Orders History
         loadUserOrders(currentUserId);
 
+        // Fetch User's Vouchers
+        loadUserVouchers(currentUserId);
+
     } else {
         // User is signed out, redirect to login
         window.location.href = "login.html";
@@ -167,6 +170,87 @@ function loadUserOrders(uid) {
         }
     });
 }
+
+function loadUserVouchers(uid) {
+    const vouchersRef = ref(database, `users/${uid}/vouchers`);
+    onValue(vouchersRef, (snapshot) => {
+        const vouchersContainer = document.getElementById('vouchersContainer');
+        vouchersContainer.innerHTML = '';
+
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const now = new Date();
+
+            let html = '';
+            let activeCount = 0;
+
+            for (const key in data) {
+                const v = data[key];
+                const expiresAt = new Date(v.expiresAt);
+                const isExpired = now > expiresAt;
+
+                if (v.status === 'used') continue; // Hide totally used vouchers
+
+                // Auto delete if expired
+                if (isExpired) {
+                    set(ref(database, `users/${uid}/vouchers/${key}`), null);
+                    continue; // Skip rendering
+                }
+
+                const timeRemaining = expiresAt - now;
+                const hoursRemaining = Math.max(0, Math.floor(timeRemaining / (1000 * 60 * 60)));
+                const expiryString = `Hết hạn sau ${hoursRemaining} giờ (${expiresAt.toLocaleTimeString('vi-VN')} ${expiresAt.toLocaleDateString('vi-VN')})`;
+
+                activeCount++;
+                html += `
+                <div style="border: 2px dashed #fbbf24; background: #fffbeb; padding: 1.5rem; text-align: center; border-radius: 12px; position: relative;">
+                    <div style="font-weight: 800; font-size: 1.2rem; color: #d97706; margin-bottom: 0.5rem;">${v.label}</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; color: #1e293b; margin-bottom: 0.5rem; background: #fff; padding: 0.5rem; border-radius: 6px; border: 1px solid #e2e8f0;">${v.code}</div>
+                    <div style="font-size: 0.85rem; color: #64748b; font-weight: 600;">${expiryString}</div>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 1rem; border-color: #fbbf24; color: #d97706;" onclick="navigator.clipboard.writeText('${v.code}'); showMessage('Đã chép mã!');">Copy Mã</button>
+                </div>`;
+            }
+
+            // Update Badge
+            const badge = document.getElementById('voucherTabBadge');
+            if (badge) {
+                if (activeCount > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = activeCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+
+            if (html === '') {
+                vouchersContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem; grid-column: 1/-1;">Bạn không có voucher nào chưa sử dụng.</p>';
+            } else {
+                vouchersContainer.innerHTML = html;
+            }
+
+        } else {
+            vouchersContainer.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 1rem; grid-column: 1/-1;">Bạn chưa có voucher nào. Hãy thử tham gia Vòng Quay May Mắn nhé!</p>';
+            const badge = document.getElementById('voucherTabBadge');
+            if (badge) badge.style.display = 'none';
+        }
+    });
+}
+
+// Tab Switching Logic
+window.switchTab = function (tabId, btn) {
+    // 1. Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(el => {
+        el.classList.remove('active');
+    });
+    // 2. Remove active state from all buttons
+    document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('active');
+    });
+    // 3. Show targeted tab
+    document.getElementById(tabId).classList.add('active');
+    // 4. Set button to active
+    if (btn) btn.classList.add('active');
+};
 
 window.handleUpdateProfile = async function (e) {
     e.preventDefault();

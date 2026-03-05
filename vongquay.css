@@ -1,0 +1,411 @@
+/* vongquay.css */
+
+:root {
+    --primary: #fbbf24;
+    --primary-dark: #f59e0b;
+    --background: #fdf8f5;
+    --surface: #ffffff;
+    --text-main: #4a4a4a;
+    --text-muted: #71717a;
+    --border: #e4e4e7;
+    --wheel-bg: #fff7ed;
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text-main);
+    font-family: 'Outfit', sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.lucky-wheel-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 3rem;
+    align-items: center;
+    flex: 1;
+}
+
+.wheel-section {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Base wheel styling */
+.wheel-wrapper {
+    position: relative;
+    width: 350px;
+    height: 350px;
+    margin: 2rem auto;
+    border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    background: white;
+    padding: 10px;
+    border: 5px solid #fbbf24;
+}
+
+.wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+    transition: transform 5s cubic-bezier(0.1, 0.7, 0.1, 1);
+    background-color: #fffbeb;
+}
+
+.wheel-slice {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    background-color: red;
+    /* placeholder */
+    transform-origin: bottom right;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0);
+}
+
+.wheel-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.segment {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%;
+    /* Radius */
+    height: 2px;
+    transform-origin: 0% 50%;
+    display: flex;
+    align-items: center;
+    /* justify-content is handled by spans */
+}
+
+.segment span {
+    position: absolute;
+    left: 20px;
+    display: block;
+    width: 110px;
+    text-align: right;
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.segment:nth-child(even) span {
+    color: #4a4a4a;
+    text-shadow: none;
+}
+
+/* The pointer/arrow */
+.wheel-pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 50px;
+    z-index: 10;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+.wheel-pointer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 35px solid #ef4444;
+    /* Red arrow */
+}
+
+.wheel-center-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70px;
+    height: 70px;
+    background: #ffffff;
+    border: 5px solid #f59e0b;
+    border-radius: 50%;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #f59e0b;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, background 0.2s;
+    user-select: none;
+}
+
+.wheel-center-btn:hover {
+    background: #fef3c7;
+    transform: translate(-50%, -50%) scale(1.05);
+}
+
+.wheel-center-btn:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+.wheel-center-btn:disabled {
+    cursor: not-allowed;
+    background: #e4e4e7;
+    border-color: #a1a1aa;
+    color: #a1a1aa;
+    transform: translate(-50%, -50%);
+}
+
+
+.info-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border);
+    height: fit-content;
+}
+
+.info-section h1 {
+    font-size: 2rem;
+    color: #78350f;
+    margin-bottom: 0.5rem;
+    font-weight: 800;
+}
+
+.info-section p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.status-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-box.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #ef4444;
+}
+
+.status-box.warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+.status-icon {
+    font-size: 1.5rem;
+}
+
+.winners-list-container {
+    margin-top: 2rem;
+    border-top: 1px dashed var(--border);
+    padding-top: 1.5rem;
+}
+
+.winners-list-container h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #4a4a4a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.winners-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.winner-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem;
+    border-bottom: 1px solid var(--border);
+    background: #fafafa;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+}
+
+.winner-item:last-child {
+    border-bottom: none;
+}
+
+.winner-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.winner-avatar {
+    width: 35px;
+    height: 35px;
+    background: #fbbf24;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.winner-details strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #1f2937;
+}
+
+.winner-details small {
+    color: #6b7280;
+    font-size: 0.8rem;
+}
+
+.winner-prize {
+    font-weight: 700;
+    color: #ef4444;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.winner-prize.special {
+    color: #8b5cf6;
+    animation: pulseText 2s infinite;
+}
+
+@keyframes pulseText {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Modal styles overrides for vongquay */
+.modal-content.prize-modal {
+    text-align: center;
+    background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+    border: 3px solid #fbbf24;
+}
+
+.prize-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: bounce 2s infinite;
+}
+
+.prize-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ef4444;
+    margin-bottom: 0.5rem;
+}
+
+.prize-desc {
+    color: #4b5563;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.confetti {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+/* Test buttons area */
+.test-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .lucky-wheel-container {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .wheel-wrapper {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto;
+    }
+
+    .wheel-center-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 0.9rem;
+    }
+
+    .info-section {
+        padding: 1.2rem;
+    }
+
+    .info-section h1 {
+        font-size: 1.6rem;
+    }
+
+    .winners-list-container h3 {
+        font-size: 1.05rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .wheel-wrapper {
+        max-width: 280px;
+    }
+
+    .wheel-center-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 0.8rem;
+    }
+}

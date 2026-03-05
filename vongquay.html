@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay May Mắn - TeaRus</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="vongquay.css">
+</head>
+
+<body>
+    <!-- Auth Loader Overlay (similar to profile.html) -->
+    <div id="authLoader">
+        <div class="loader-circle"></div>
+        <p>Đang kiểm tra đăng nhập...</p>
+    </div>
+
+    <!-- Application Top Bar -->
+    <nav class="navbar" style="position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="brand-text"><span class="brand-acc">Tea</span>Rus</span>
+            </a>
+
+            <button class="menu-toggle" id="mobile-menu" aria-label="Menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">TRANG CHỦ</a></li>
+                <li><a href="order.html">ĐẶT HÀNG</a></li>
+                <li><a href="profile.html">HỒ SƠ CỦA TÔI</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="lucky-wheel-container">
+        <!-- Main Wheel Section -->
+        <div class="wheel-section">
+            <div class="wheel-pointer"></div>
+            <div class="wheel-wrapper">
+                <div class="wheel" id="wheel">
+                    <canvas id="wheelCanvas" width="330" height="330"
+                        style="width: 100%; height: 100%; border-radius: 50%;"></canvas>
+                </div>
+                <button class="wheel-center-btn" id="btnSpin" disabled>QUAY</button>
+            </div>
+            <div class="test-actions">
+                <button class="btn btn-outline" id="btnResetTest" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">🔄
+                    Xóa Thuộc Tính Test</button>
+            </div>
+            <canvas id="confetti" class="confetti" style="display: none;"></canvas>
+        </div>
+
+        <!-- Information & Status Section -->
+        <div class="info-section">
+            <h1>Vòng Quay May Mắn</h1>
+            <p>Mỗi ngày 1 lượt quay! Tham gia ngay để có cơ hội trúng **Voucher giảm 100%** và hàng ngàn **Voucher
+                10K**.</p>
+
+            <div id="statusBox" class="status-box">
+                <span class="status-icon">🎮</span>
+                <div id="statusText">
+                    <strong>Đang kết nối...</strong><br>
+                    <small>Vui lòng đợi trong giây lát.</small>
+                </div>
+            </div>
+
+            <div class="pool-info"
+                style="margin-bottom: 1.5rem; background: #fafafa; padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+                <h4 style="margin-bottom: 0.5rem; color: #4b5563;">Kho Thưởng Hiện Tại:</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                    <span>Voucher Đặc Biệt (100%):</span>
+                    <strong id="specialPoolCount" style="color: #ef4444;">--</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Voucher Thường (10K):</span>
+                    <strong id="normalPoolCount" style="color: #10b981;">--</strong>
+                </div>
+            </div>
+
+            <div class="winners-list-container">
+                <h3>Thành viên May Mắn Nhất 🏆</h3>
+                <ul class="winners-list" id="winnersList">
+                    <!-- Loaded dynamically -->
+                    <p style="text-align: center; color: #9ca3af; padding: 1rem;">Chưa có người trúng thưởng.</p>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prize Modal -->
+    <div class="modal hidden" id="prizeModal">
+        <div class="modal-content prize-modal">
+            <div class="prize-icon" id="prizeIcon">🎁</div>
+            <h2 class="prize-name" id="prizeTitle">Chúc Mừng Bạn!</h2>
+            <p class="prize-desc" id="prizeDesc">Bạn đã trúng 1 Voucher Giảm Giá 10.000đ.</p>
+            <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 1.5rem;">Voucher đã được lưu vào Hồ Sơ của bạn
+                và có hạn dùng trong 24 giờ tới.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-primary" onclick="window.closePrizeModal()">Đóng</button>
+                <a href="order.html" class="btn btn-outline" id="btnUseNow" style="background: white;">Dùng Ngay</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Prize Modal -->
+    <div class="modal hidden" id="noPrizeModal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">😢</div>
+            <h2 style="font-size: 1.5rem; color: #4b5563; margin-bottom: 0.5rem;">Chúc bạn may mắn lần sau!</h2>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">Hãy quay lại vào ngày mai để thử tiếp vận may nhé.</p>
+            <button class="btn btn-primary"
+                onclick="document.getElementById('noPrizeModal').classList.add('hidden')">Đóng</button>
+        </div>
+    </div>
+
+    <script type="module" src="vongquay.js"></script>
+
+    <!-- Mobile menu logic -->
+    <script>
+        const mobileMenu = document.getElementById('mobile-menu');
+        const navLinks = document.getElementById('nav-links');
+
+        mobileMenu.addEventListener('click', () => {
+            mobileMenu.classList.toggle('is-active');
+            navLinks.classList.toggle('active');
+        });
+
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('is-active');
+                navLinks.classList.remove('active');
+            });
+        });
+    </script>
+
+    <!-- Confetti Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</body>
+
+</html>

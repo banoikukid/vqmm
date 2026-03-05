@@ -918,39 +918,75 @@ window.loadDiscountCodes = async function () {
 
     try {
         const snap = await get(ref(db, 'discount_codes'));
-        if (!snap.exists()) {
-            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Chưa có mã nào.</td></tr>';
-            return;
-        }
-
-        const codes = snap.val();
+        const codes = snap.exists() ? snap.val() : {};
         // Show all codes for today
         const todayCodes = Object.entries(codes).filter(([, v]) => v.expires_date === todayStr);
 
-        if (todayCodes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Không có mã nào hết hạn hôm nay.</td></tr>';
+        // Fetch Lucky Wheel Codes
+        const lwSnap = await get(ref(db, 'lucky_wheel/winners'));
+        let todayLwCodes = [];
+        if (lwSnap.exists()) {
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const startOfDayTs = startOfDay.valueOf();
+
+            const lwWinners = lwSnap.val();
+            const lwPromises = Object.values(lwWinners)
+                .filter(v => v.timestamp >= startOfDayTs && v.voucherId)
+                .map(async (v) => {
+                    const vSnap = await get(ref(db, `users/${v.uid}/vouchers/${v.voucherId}`));
+                    const vData = vSnap.exists() ? vSnap.val() : null;
+                    return [
+                        v.voucherId,
+                        {
+                            label: `Vòng Quay - ${v.prizeLabel}`,
+                            phone: `${v.name || 'Khách'} (VQMM)`,
+                            discount_value: v.prizeType === 'special' ? 100 : 10000,
+                            isPercent: v.prizeType === 'special',
+                            expires_date: todayStr,
+                            status: vData ? (vData.status === 'active' ? 'unused' : vData.status) : 'deleted',
+                            isLuckyWheel: true,
+                            uid: v.uid
+                        }
+                    ];
+                });
+            todayLwCodes = await Promise.all(lwPromises);
+        }
+
+        const allCodes = [...todayCodes, ...todayLwCodes];
+
+        if (allCodes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Không có mã nào trong hôm nay.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = todayCodes.map(([code, data]) => `
+        tbody.innerHTML = allCodes.map(([code, data]) => {
+            const isUnused = data.status === 'unused';
+            const valueDisplay = data.isPercent ? `-${data.discount_value}%` : `-${parseInt(data.discount_value).toLocaleString('vi-VN')}đ`;
+
+            return `
             <tr>
                 <td><strong style="font-family:monospace; color:#4f46e5; font-size:1rem;">${code}</strong></td>
                 <td>${data.label || '-'}</td>
                 <td>${data.phone || 'Tất cả'}</td>
-                <td style="color:#10b981; font-weight:700;">-${parseInt(data.discount_value).toLocaleString('vi-VN')}đ</td>
+                <td style="color:#10b981; font-weight:700;">${valueDisplay}</td>
                 <td>${data.expires_date}</td>
                 <td>
                     <span style="padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700;
-                        background: ${data.status === 'unused' ? '#dcfce7' : '#fee2e2'};
-                        color: ${data.status === 'unused' ? '#166534' : '#991b1b'};">
-                        ${data.status === 'unused' ? '✅ Còn Hiệu Lực' : '❌ Đã Dùng'}
+                        background: ${isUnused ? '#dcfce7' : '#fee2e2'};
+                        color: ${isUnused ? '#166534' : '#991b1b'};">
+                        ${isUnused ? '✅ Còn Hiệu Lực' : '❌ Đã Dùng / Hết Hạn'}
                     </span>
                 </td>
                 <td>
-                    <button onclick="deleteDiscountCode('${code}')" class="btn btn-danger btn-sm" style="padding:0.3rem 0.7rem; font-size:0.8rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">Xóa</button>
+                    ${data.isLuckyWheel ?
+                    `<span style="color:#94a3b8; font-size:0.8rem;">Từ VQMM</span>` :
+                    `<button onclick="deleteDiscountCode('${code}')" class="btn btn-danger btn-sm" style="padding:0.3rem 0.7rem; font-size:0.8rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">Xóa</button>`
+                }
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         console.error(err);
         tbody.innerHTML = '<tr><td colspan="7" class="loading-text">Lỗi tải dữ liệu.</td></tr>';
