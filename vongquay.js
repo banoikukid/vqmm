@@ -388,7 +388,7 @@ if (btnVerifyChatbotCode) {
 
         if (hisSnap.exists()) {
             const data = hisSnap.val();
-            if (data.bonusClaimed) bonusSpins = 6;
+            if (data.bonusClaimed) bonusSpins = 3;
             if (data.spinCount) usedSpins = data.spinCount;
         }
 
@@ -438,10 +438,7 @@ if (btnVerifyChatbotCode) {
             }
         }
 
-        // Tắt giải 30k nếu chưa đến 18:00
-        if (currentHour < 18) {
-            targetProbSpecial = 0;
-        }
+
 
         // Roll the dice
         const rand = Math.random();
