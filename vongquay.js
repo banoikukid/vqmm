@@ -1,7 +1,7 @@
 // file: vongquay.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, set, runTransaction, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, runTransaction, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 // Firebase configuration
 const firebaseConfig = {
@@ -244,9 +244,12 @@ async function checkDailyLimit() {
 }
 
 // Hunt Spins Banner Handle
-document.getElementById('btnHuntSpins')?.addEventListener('click', () => {
-    showOutOfSpinsModal();
-});
+const btnHuntSpins = document.getElementById('btnHuntSpins');
+if (btnHuntSpins) {
+    btnHuntSpins.addEventListener('click', () => {
+        showOutOfSpinsModal();
+    });
+}
 
 function showOutOfSpinsModal() {
     const codeEl = document.getElementById('fbShareCode');
@@ -258,200 +261,232 @@ function showOutOfSpinsModal() {
 }
 
 // Copy Code Button
-document.getElementById('btnCopyFbCode')?.addEventListener('click', () => {
-    const code = document.getElementById('fbShareCode').textContent;
-    navigator.clipboard.writeText(code).then(() => {
-        alert("Đã copy: " + code);
-        window.open('https://www.facebook.com/trasuatearus', '_blank');
-    }).catch(err => {
-        console.error('Failed to copy', err);
+const btnCopyFbCode = document.getElementById('btnCopyFbCode');
+if (btnCopyFbCode) {
+    btnCopyFbCode.addEventListener('click', () => {
+        const code = document.getElementById('fbShareCode').textContent;
+
+        // Fallback backward compatibility for older iOS
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(code).then(() => {
+                alert("Đã copy mã thành công!");
+                window.open('https://www.facebook.com/trasuatearus', '_blank');
+            }).catch(err => {
+                alert("Bạn vui lòng tự bôi đen copy đoạn mã trên nhé!");
+                window.open('https://www.facebook.com/trasuatearus', '_blank');
+            });
+        } else {
+            // Older browser fallback
+            let textArea = document.createElement("textarea");
+            textArea.value = code;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("Đã copy mã thành công!");
+            } catch (err) {
+                alert("Bạn vui lòng tự bôi đen copy đoạn mã trên nhé!");
+            }
+            textArea.remove();
+            window.open('https://www.facebook.com/trasuatearus', '_blank');
+        }
     });
-});
+}
 
 // Verify Chatbot Code
-document.getElementById('btnVerifyChatbotCode')?.addEventListener('click', async () => {
-    if (!currentUserId) return;
-    const inputCode = document.getElementById('chatbotCodeInput').value.trim().toUpperCase();
-    const msgEl = document.getElementById('chatbotVerifyMsg');
+const btnVerifyChatbotCode = document.getElementById('btnVerifyChatbotCode');
+if (btnVerifyChatbotCode) {
+    btnVerifyChatbotCode.addEventListener('click', async () => {
+        if (!currentUserId) return;
+        const inputCode = document.getElementById('chatbotCodeInput').value.trim().toUpperCase();
+        const msgEl = document.getElementById('chatbotVerifyMsg');
 
-    if (!inputCode) {
-        msgEl.textContent = "Vui lòng nhập mã từ Chatbot!";
-        msgEl.style.color = "#ef4444";
-        msgEl.style.display = "block";
-        return;
-    }
+        if (!inputCode) {
+            msgEl.textContent = "Vui lòng nhập mã từ Chatbot!";
+            msgEl.style.color = "#ef4444";
+            msgEl.style.display = "block";
+            return;
+        }
 
-    try {
-        const configSnap = await get(ref(database, 'config/chatbot_code'));
-        const secretCode = configSnap.exists() ? configSnap.val() : '';
+        try {
+            const configSnap = await get(ref(database, 'config/chatbot_code'));
+            const secretCode = configSnap.exists() ? configSnap.val() : '';
 
-        if (inputCode === secretCode && secretCode !== '') {
-            const today = getTodayString();
-            const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
-            const hisSnap = await get(historyRef);
+            if (inputCode === secretCode && secretCode !== '') {
+                const today = getTodayString();
+                const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
+                const hisSnap = await get(historyRef);
 
-            if (hisSnap.exists() && hisSnap.val().bonusClaimed) {
-                msgEl.textContent = "Bạn đã dùng mã này trong hôm nay rồi!";
+                if (hisSnap.exists() && hisSnap.val().bonusClaimed) {
+                    msgEl.textContent = "Bạn đã dùng mã này trong hôm nay rồi!";
+                    msgEl.style.color = "#ef4444";
+                    msgEl.style.display = "block";
+                    return;
+                }
+
+                // Claim bonus!
+                await update(historyRef, {
+                    bonusClaimed: true,
+                    bonusTimestamp: serverTimestamp()
+                });
+
+                msgEl.textContent = "Chúc mừng! Bạn được cộng thêm 2 lượt quay!";
+                msgEl.style.color = "#10b981";
+                msgEl.style.display = "block";
+
+                setTimeout(() => {
+                    document.getElementById('outOfSpinsModal').classList.add('hidden');
+                }, 1500);
+
+            } else {
+                msgEl.textContent = "Mã Chatbot không chính xác!";
                 msgEl.style.color = "#ef4444";
                 msgEl.style.display = "block";
-                return;
             }
-
-            // Claim bonus!
-            await update(historyRef, {
-                bonusClaimed: true,
-                bonusTimestamp: serverTimestamp()
-            });
-
-            msgEl.textContent = "Chúc mừng! Bạn được cộng thêm 2 lượt quay!";
-            msgEl.style.color = "#10b981";
-            msgEl.style.display = "block";
-
-            setTimeout(() => {
-                document.getElementById('outOfSpinsModal').classList.add('hidden');
-            }, 1500);
-
-        } else {
-            msgEl.textContent = "Mã Chatbot không chính xác!";
+        } catch (e) {
+            console.error("Lỗi verify mã", e);
+            msgEl.textContent = "Lỗi: " + e.message;
             msgEl.style.color = "#ef4444";
             msgEl.style.display = "block";
         }
-    } catch (e) {
-        console.error("Lỗi verify mã", e);
-    }
-});
+    });
 
 
-// 5. Spin Logic
-btnSpin.addEventListener('click', async () => {
-    if (isSpinning || !currentUserId) return;
+    // 5. Spin Logic
+    btnSpin.addEventListener('click', async () => {
+        if (isSpinning || !currentUserId) return;
 
-    // ----- Check Spin Limits First ------
-    const today = getTodayString();
-    const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
-    const hisSnap = await get(historyRef);
+        // ----- Check Spin Limits First ------
+        const today = getTodayString();
+        const historyRef = ref(database, `lucky_wheel/history/${today}/${currentUserId}`);
+        const hisSnap = await get(historyRef);
 
-    let freeSpins = 1;
-    let bonusSpins = 0;
-    let usedSpins = 0;
+        let freeSpins = 1;
+        let bonusSpins = 0;
+        let usedSpins = 0;
 
-    if (hisSnap.exists()) {
-        const data = hisSnap.val();
-        if (data.bonusClaimed) bonusSpins = 2;
-        if (data.spinCount) usedSpins = data.spinCount;
-    }
-
-    const totalSpins = freeSpins + bonusSpins;
-    const remainingSpins = totalSpins - usedSpins;
-
-    if (remainingSpins <= 0) {
-        showOutOfSpinsModal();
-        return;
-    }
-    // ------------------------------------
-
-    isSpinning = true;
-    btnSpin.disabled = true;
-    btnSpin.style.background = '#e4e4e7';
-
-    updateConnectionStatus("Đang quay...");
-
-    // Probabilities
-    const rand = Math.random();
-    let intendedPrize = 'empty';
-    if (rand <= 0.30) intendedPrize = 'special';
-    else if (rand <= 0.60) intendedPrize = 'normal';
-
-    try {
-
-        let actualPrize = 'empty';
-        let prizeLabel = '';
-        let discountType = '';
-        let discountValue = 0;
-
-        const poolRef = ref(database, 'lucky_wheel/pool');
-        const transResult = await runTransaction(poolRef, (currentData) => {
-            if (currentData === null) return currentData;
-
-            if (intendedPrize === 'special' && currentData.special > 0) {
-                currentData.special--;
-                return currentData;
-            }
-            if (intendedPrize === 'normal' && currentData.normal > 0) {
-                currentData.normal--;
-                return currentData;
-            }
-
-            // If we get here, the intendedPrize ran out of stock or we rolled 'empty'
-            intendedPrize = 'empty';
-            return; // abort transaction (write nothing, user gets empty)
-        });
-
-        if (transResult.committed || intendedPrize === 'empty') {
-            actualPrize = intendedPrize;
-            if (actualPrize === 'special') {
-                prizeLabel = 'Giảm 100%';
-                discountType = 'percent';
-                discountValue = 100;
-            } else if (actualPrize === 'normal') {
-                prizeLabel = 'Giảm 10K';
-                discountType = 'fixed';
-                discountValue = 10000;
-            }
+        if (hisSnap.exists()) {
+            const data = hisSnap.val();
+            if (data.bonusClaimed) bonusSpins = 2;
+            if (data.spinCount) usedSpins = data.spinCount;
         }
 
-        // Save history (increment spins)
-        let currentSpinHistory = hisSnap.exists() ? hisSnap.val() : {};
-        if (!currentSpinHistory.spinCount) currentSpinHistory.spinCount = 0;
-        currentSpinHistory.spinCount += 1;
-        currentSpinHistory.lastSpinTimestamp = serverTimestamp();
+        const totalSpins = freeSpins + bonusSpins;
+        const remainingSpins = totalSpins - usedSpins;
 
-        await update(historyRef, currentSpinHistory);
+        if (remainingSpins <= 0) {
+            showOutOfSpinsModal();
+            return;
+        }
+        // ------------------------------------
 
-        // Generate Voucher ID first
-        const voucherId = 'VQMM_' + Date.now().toString(36).toUpperCase();
+        isSpinning = true;
+        btnSpin.disabled = true;
+        btnSpin.style.background = '#e4e4e7';
 
-        // Add to winners if won
-        if (actualPrize !== 'empty') {
-            await push(ref(database, 'lucky_wheel/winners'), {
-                uid: currentUserId,
-                name: currentUserInfo.name || 'Khách',
-                prizeType: actualPrize,
-                prizeLabel: prizeLabel,
-                voucherId: voucherId,
-                timestamp: Date.now()
+        updateConnectionStatus("Đang quay...");
+
+        // Probabilities
+        const rand = Math.random();
+        let intendedPrize = 'empty';
+        if (rand <= 0.30) intendedPrize = 'special';
+        else if (rand <= 0.60) intendedPrize = 'normal';
+
+        try {
+
+            let actualPrize = 'empty';
+            let prizeLabel = '';
+            let discountType = '';
+            let discountValue = 0;
+
+            const poolRef = ref(database, 'lucky_wheel/pool');
+            const transResult = await runTransaction(poolRef, (currentData) => {
+                if (currentData === null) return currentData;
+
+                if (intendedPrize === 'special' && currentData.special > 0) {
+                    currentData.special--;
+                    return currentData;
+                }
+                if (intendedPrize === 'normal' && currentData.normal > 0) {
+                    currentData.normal--;
+                    return currentData;
+                }
+
+                // If we get here, the intendedPrize ran out of stock or we rolled 'empty'
+                intendedPrize = 'empty';
+                return; // abort transaction (write nothing, user gets empty)
             });
 
-            // Grant Voucher to User Profile (Expires end of today)
-            const endOfDay = new Date();
-            endOfDay.setHours(23, 59, 59, 999);
+            if (transResult.committed || intendedPrize === 'empty') {
+                actualPrize = intendedPrize;
+                if (actualPrize === 'special') {
+                    prizeLabel = 'Giảm 100%';
+                    discountType = 'percent';
+                    discountValue = 100;
+                } else if (actualPrize === 'normal') {
+                    prizeLabel = 'Giảm 10K';
+                    discountType = 'fixed';
+                    discountValue = 10000;
+                }
+            }
 
-            await set(ref(database, `users/${currentUserId}/vouchers/${voucherId}`), {
-                code: voucherId,
-                discount_type: discountType,
-                discount_value: discountValue,
-                label: `Voucher ${prizeLabel} (Vòng Quay)`,
-                origin: 'lucky_wheel',
-                expiresAt: endOfDay.toISOString(),
-                status: 'active',
-                createdAt: new Date().toISOString()
-            });
+            // Save history (increment spins)
+            let currentSpinHistory = hisSnap.exists() ? hisSnap.val() : {};
+            if (!currentSpinHistory.spinCount) currentSpinHistory.spinCount = 0;
+            currentSpinHistory.spinCount += 1;
+            currentSpinHistory.lastSpinTimestamp = serverTimestamp();
+
+            await update(historyRef, currentSpinHistory);
+
+            // Generate Voucher ID first
+            const voucherId = 'VQMM_' + Date.now().toString(36).toUpperCase();
+
+            // Add to winners if won
+            if (actualPrize !== 'empty') {
+                await push(ref(database, 'lucky_wheel/winners'), {
+                    uid: currentUserId,
+                    name: currentUserInfo.name || 'Khách',
+                    prizeType: actualPrize,
+                    prizeLabel: prizeLabel,
+                    voucherId: voucherId,
+                    timestamp: Date.now()
+                });
+
+                // Grant Voucher to User Profile (Expires end of today)
+                const endOfDay = new Date();
+                endOfDay.setHours(23, 59, 59, 999);
+
+                await set(ref(database, `users/${currentUserId}/vouchers/${voucherId}`), {
+                    code: voucherId,
+                    discount_type: discountType,
+                    discount_value: discountValue,
+                    label: `Voucher ${prizeLabel} (Vòng Quay)`,
+                    origin: 'lucky_wheel',
+                    expiresAt: endOfDay.toISOString(),
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            // Animate Wheel
+            animateWheelTarget(actualPrize, prizeLabel, actualPrize !== 'empty' ? voucherId : null);
+
+        } catch (e) {
+            if (e.message === 'ALREADY_SPUN') {
+                updateConnectionStatus("Bạn đã quay vòng xoay hôm nay rồi!", "error");
+            } else {
+                console.error(e);
+                updateConnectionStatus("Lỗi hệ thống. Không thể quay lúc này.", "error");
+                isSpinning = false;
+                btnSpin.disabled = false;
+            }
         }
-
-        // Animate Wheel
-        animateWheelTarget(actualPrize, prizeLabel, actualPrize !== 'empty' ? voucherId : null);
-
-    } catch (e) {
-        if (e.message === 'ALREADY_SPUN') {
-            updateConnectionStatus("Bạn đã quay vòng xoay hôm nay rồi!", "error");
-        } else {
-            console.error(e);
-            updateConnectionStatus("Lỗi hệ thống. Không thể quay lúc này.", "error");
-            isSpinning = false;
-            btnSpin.disabled = false;
-        }
-    }
-});
+    });
+}
 
 function animateWheelTarget(actualPrize, prizeLabel, voucherId) {
     // Determine which segment to stop on based on prize

@@ -1,5 +1,13 @@
 {
     "rules": {
+        "config": {
+            ".read": true,
+            ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+        },
+        "lucky_wheel": {
+            ".read": true,
+            ".write": true
+        },
         "products": {
             ".read": true,
             ".write": "auth != null && root.child('admins').child(auth.uid).exists()"

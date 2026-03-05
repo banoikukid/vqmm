@@ -73,6 +73,8 @@ function grantAdminAccess(user) {
     loadBanners();
     loadProducts();
     loadCustomers();
+    loadDiscountCodes();
+    loadChatbotCode();
 }
 
 function showAuthError(msg) {
@@ -814,8 +816,20 @@ if (mobileMenu && navLinks) {
 function loadChatbotCode() {
     onValue(ref(db, 'config/chatbot_code'), (snapshot) => {
         const input = document.getElementById('chatbotCodeInput');
+        const display = document.getElementById('currentChatbotCodeDisplay');
+        const code = snapshot.exists() ? snapshot.val() : '';
+
         if (input) {
-            input.value = snapshot.exists() ? snapshot.val() : '';
+            input.value = code;
+        }
+        if (display) {
+            if (code) {
+                display.innerHTML = `✅ Mã hiện tại đang áp dụng: <strong style="color: #047857; font-size: 1.05rem;">${code}</strong>`;
+            } else {
+                display.innerHTML = `⚠️ Hiện chưa cài đặt mã khuyến mãi nào.`;
+                display.style.background = "#fffbeb";
+                display.style.color = "#b45309";
+            }
         }
     });
 }
