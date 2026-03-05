@@ -35,17 +35,18 @@ let currentUserId = null;
 let currentUserInfo = null;
 let currentRotation = 0;
 let isSpinning = false;
+window.isPoolEmpty = false; // Track if pool is completely exhausted
 
 // Wheel Segments Config
 const segments = [
-    { label: "Giảm 100%", type: "special", color: "#fef08a", stroke: "#fbbf24" },
-    { label: "Chúc ML", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
-    { label: "Giảm 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24" },
-    { label: "Chúc ML", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
-    { label: "Giảm 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24" },
-    { label: "Chúc ML", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
-    { label: "Giảm 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24" },
-    { label: "Chúc ML", type: "empty", color: "#ffffff", stroke: "#fbbf24" }
+    { label: "Voucher 30K", type: "special", color: "#fef08a", stroke: "#fbbf24", val: 30000 },
+    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
+    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24", val: 10000 },
+    { label: "Cộng 5 Điểm", type: "points_5", color: "#bbf7d0", stroke: "#22c55e", val: 5 },
+    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
+    { label: "Cộng 10 Điểm", type: "points_10", color: "#86efac", stroke: "#22c55e", val: 10 },
+    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24", val: 10000 },
+    { label: "Cộng 20 Điểm", type: "points_20", color: "#4ade80", stroke: "#22c55e", val: 20 }
 ];
 
 function drawWheel() {
@@ -139,8 +140,10 @@ async function ensurePoolExists() {
         if (currentData === null || currentData.last_reset_date !== today) {
             // First time ever, or new day started -> refill pool
             return {
-                special: 1, // 1 voucher giam 100%
-                normal: 10,  // 10 voucher giam 10k
+                special: 1, // 1 voucher giam 30k
+                normal_morning: 3,  // 3 voucher giam 10k sang (0h-12h)
+                normal_afternoon: 4, // 4 voucher giam 10k trua (12h-18h)
+                normal_evening: 3,   // 3 voucher giam 10k toi (18h-24h)
                 last_reset_date: today
             };
         }
@@ -154,14 +157,21 @@ function setupLiveListeners() {
     onValue(ref(database, 'lucky_wheel/pool'), (snap) => {
         if (snap.exists()) {
             const data = snap.val();
+            const totalNormal = (data.normal_morning || 0) + (data.normal_afternoon || 0) + (data.normal_evening || 0);
+
             specialPoolCountEl.textContent = data.special || 0;
-            normalPoolCountEl.textContent = data.normal || 0;
+            normalPoolCountEl.textContent = totalNormal;
 
             // Limit completely if pool is 0
-            if (data.special === 0 && data.normal === 0) {
+            if (data.special <= 0 && totalNormal <= 0) {
+                window.isPoolEmpty = true;
                 btnSpin.disabled = true;
                 btnSpin.textContent = "HẾT VOUCHER";
+                btnSpin.style.background = '#e4e4e7';
                 updateConnectionStatus("Voucher trong hệ thống đã được phát hết. Hẹn gặp lại dịp khác!", "error");
+            } else {
+                window.isPoolEmpty = false;
+                // We rely on checkDailyLimit to re-enable the button if they have spins
             }
         }
     });
@@ -217,7 +227,7 @@ async function checkDailyLimit() {
         if (snap.exists()) {
             const data = snap.val();
             if (data.bonusClaimed) {
-                bonusSpins = 2; // claimed chatbot code = 2 extra spins
+                bonusSpins = 3; // claimed chatbot code = 3 extra spins
             }
             if (data.spinCount) {
                 usedSpins = data.spinCount;
@@ -227,12 +237,19 @@ async function checkDailyLimit() {
         const totalSpins = freeSpins + bonusSpins;
         const remainingSpins = totalSpins - usedSpins;
 
+        if (window.isPoolEmpty) {
+            btnSpin.disabled = true;
+            btnSpin.textContent = "HẾT VOUCHER";
+            btnSpin.style.background = '#e4e4e7';
+            updateConnectionStatus("Voucher trong hệ thống đã được phát hết. Hẹn gặp lại dịp khác!", "error");
+            return;
+        }
+
         if (remainingSpins > 0) {
             btnSpin.disabled = false;
             btnSpin.textContent = `QUAY (Còn ${remainingSpins} Lượt)`;
             btnSpin.style.background = '';
 
-            // Check exactly 1 pool count msg
             updateConnectionStatus("Nhấn QUAY để thử vận may hôm nay!", "info");
         } else {
             btnSpin.disabled = false; // still allow clicking to trigger popup
@@ -334,7 +351,7 @@ if (btnVerifyChatbotCode) {
                     bonusTimestamp: serverTimestamp()
                 });
 
-                msgEl.textContent = "Chúc mừng! Bạn được cộng thêm 2 lượt quay!";
+                msgEl.textContent = "Chúc mừng! Bạn được cộng thêm 3 lượt quay!";
                 msgEl.style.color = "#10b981";
                 msgEl.style.display = "block";
 
@@ -371,7 +388,7 @@ if (btnVerifyChatbotCode) {
 
         if (hisSnap.exists()) {
             const data = hisSnap.val();
-            if (data.bonusClaimed) bonusSpins = 2;
+            if (data.bonusClaimed) bonusSpins = 6;
             if (data.spinCount) usedSpins = data.spinCount;
         }
 
@@ -390,14 +407,61 @@ if (btnVerifyChatbotCode) {
 
         updateConnectionStatus("Đang quay...");
 
-        // Probabilities
+        // --- NEW STRATEGIC PROBABILITY ENGINE ---
+        const currentHour = new Date().getHours();
+
+        let targetProbSpecial = 0; // 30k
+        let targetProbNormal = 0;  // 10k
+        let targetProbPoints = 0;  // 5, 10, 20
+        // The rest is 'empty'
+
+        if (usedSpins === 0) {
+            // Lượt 1 (Bait): Kéo qua Fanpage
+            targetProbSpecial = 0.001; // 0.1%
+            targetProbNormal = 0.004;  // 0.4%
+            targetProbPoints = 0.05;   // 5% 
+        } else {
+            // Lượt VIP (Đã lấy code Fanpage)
+            targetProbSpecial = 0.005; // 0.5%
+            targetProbNormal = 0.080;  // 8.0%
+            targetProbPoints = 0.300;  // 30%
+
+            // Cơ chế chạy chốt cuối ngày: Sau 20:00 buff tỷ lệ xả x2
+            const poolRefTest = ref(database, 'lucky_wheel/pool');
+            const snapPool = await get(poolRefTest);
+            if (snapPool.exists() && currentHour >= 20) {
+                const poolT = snapPool.val();
+                const remaining = (poolT.special || 0) + (poolT.normal_morning || 0) + (poolT.normal_afternoon || 0) + (poolT.normal_evening || 0);
+                if (remaining >= 5) {
+                    targetProbNormal = 0.20; // 20%
+                }
+            }
+        }
+
+        // Tắt giải 30k nếu chưa đến 18:00
+        if (currentHour < 18) {
+            targetProbSpecial = 0;
+        }
+
+        // Roll the dice
         const rand = Math.random();
         let intendedPrize = 'empty';
-        if (rand <= 0.30) intendedPrize = 'special';
-        else if (rand <= 0.60) intendedPrize = 'normal';
+
+        if (rand <= targetProbSpecial) {
+            intendedPrize = 'special';
+        } else if (rand <= (targetProbSpecial + targetProbNormal)) {
+            intendedPrize = 'normal';
+        } else if (rand <= (targetProbSpecial + targetProbNormal + targetProbPoints)) {
+            // Pick a point tier randomly [5, 10, 20] -> Approx weights: 5(50%), 10(35%), 20(15%)
+            const ptRand = Math.random();
+            if (ptRand <= 0.50) intendedPrize = 'points_5';
+            else if (ptRand <= 0.85) intendedPrize = 'points_10';
+            else intendedPrize = 'points_20';
+        } else {
+            intendedPrize = 'empty';
+        }
 
         try {
-
             let actualPrize = 'empty';
             let prizeLabel = '';
             let discountType = '';
@@ -407,30 +471,44 @@ if (btnVerifyChatbotCode) {
             const transResult = await runTransaction(poolRef, (currentData) => {
                 if (currentData === null) return currentData;
 
+                // Time gate logic for 10K
+                let targetNormalPool = 'normal_morning';
+                if (currentHour >= 12 && currentHour < 18) targetNormalPool = 'normal_afternoon';
+                else if (currentHour >= 18) targetNormalPool = 'normal_evening';
+
+                // Handle out of stock constraints
+                if (intendedPrize === 'special' && currentData.special <= 0) {
+                    intendedPrize = 'empty'; // fallback
+                }
+
+                if (intendedPrize === 'normal' && (currentData[targetNormalPool] || 0) <= 0) {
+                    intendedPrize = 'empty'; // fallback
+                }
+
+                // Final Update in DB
                 if (intendedPrize === 'special' && currentData.special > 0) {
                     currentData.special--;
-                    return currentData;
-                }
-                if (intendedPrize === 'normal' && currentData.normal > 0) {
-                    currentData.normal--;
-                    return currentData;
+                } else if (intendedPrize === 'normal' && currentData[targetNormalPool] > 0) {
+                    currentData[targetNormalPool]--;
                 }
 
-                // If we get here, the intendedPrize ran out of stock or we rolled 'empty'
-                intendedPrize = 'empty';
-                return; // abort transaction (write nothing, user gets empty)
+                return currentData;
             });
 
-            if (transResult.committed || intendedPrize === 'empty') {
+            let earnedPointsVal = 0;
+            if (transResult.committed || intendedPrize === 'empty' || intendedPrize.startsWith('points_')) {
                 actualPrize = intendedPrize;
                 if (actualPrize === 'special') {
-                    prizeLabel = 'Giảm 100%';
-                    discountType = 'percent';
-                    discountValue = 100;
+                    prizeLabel = 'Voucher 30K';
+                    discountType = 'fixed';
+                    discountValue = 30000;
                 } else if (actualPrize === 'normal') {
-                    prizeLabel = 'Giảm 10K';
+                    prizeLabel = 'Voucher 10K';
                     discountType = 'fixed';
                     discountValue = 10000;
+                } else if (actualPrize.startsWith('points_')) {
+                    earnedPointsVal = parseInt(actualPrize.split('_')[1]);
+                    prizeLabel = `Cộng ${earnedPointsVal} Điểm`;
                 }
             }
 
@@ -456,33 +534,43 @@ if (btnVerifyChatbotCode) {
                     timestamp: Date.now()
                 });
 
-                // Grant Voucher to User Profile (Expires end of today)
-                const endOfDay = new Date();
-                endOfDay.setHours(23, 59, 59, 999);
+                if (earnedPointsVal > 0) {
+                    // Grant Points directly
+                    const userRef = ref(database, `users/${currentUserId}/points`);
+                    await runTransaction(userRef, (currentPoints) => {
+                        return (currentPoints || 0) + earnedPointsVal;
+                    });
+                } else {
+                    // Grant Voucher to User Profile (Expires end of today)
+                    const endOfDay = new Date();
+                    endOfDay.setHours(23, 59, 59, 999);
 
-                await set(ref(database, `users/${currentUserId}/vouchers/${voucherId}`), {
-                    code: voucherId,
-                    discount_type: discountType,
-                    discount_value: discountValue,
-                    label: `Voucher ${prizeLabel} (Vòng Quay)`,
-                    origin: 'lucky_wheel',
-                    expiresAt: endOfDay.toISOString(),
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                });
+                    await set(ref(database, `users/${currentUserId}/vouchers/${voucherId}`), {
+                        code: voucherId,
+                        discount_type: discountType,
+                        discount_value: discountValue,
+                        label: `Voucher ${prizeLabel} (Vòng Quay)`,
+                        origin: 'lucky_wheel',
+                        expiresAt: endOfDay.toISOString(),
+                        status: 'active',
+                        createdAt: new Date().toISOString()
+                    });
+                }
             }
 
             // Animate Wheel
             animateWheelTarget(actualPrize, prizeLabel, actualPrize !== 'empty' ? voucherId : null);
 
         } catch (e) {
+            console.error(e);
             if (e.message === 'ALREADY_SPUN') {
                 updateConnectionStatus("Bạn đã quay vòng xoay hôm nay rồi!", "error");
             } else {
-                console.error(e);
-                updateConnectionStatus("Lỗi hệ thống. Không thể quay lúc này.", "error");
+                updateConnectionStatus("Lỗi HH: " + (e.message || "Unknown error"), "error");
                 isSpinning = false;
                 btnSpin.disabled = false;
+                btnSpin.style.background = '';
+                btnSpin.textContent = "THỬ LẠI";
             }
         }
     });
@@ -495,9 +583,12 @@ function animateWheelTarget(actualPrize, prizeLabel, voucherId) {
     // Empty indexes: 1, 3, 5, 7
 
     let targetIndexes = [];
-    if (actualPrize === 'special') targetIndexes = [0];
-    else if (actualPrize === 'normal') targetIndexes = [2, 4, 6];
-    else targetIndexes = [1, 3, 5, 7];
+    if (actualPrize === 'special') targetIndexes = [0]; // Voucher 30K
+    else if (actualPrize === 'normal') targetIndexes = [2, 6]; // Voucher 10K (slot 2, 6)
+    else if (actualPrize === 'points_5') targetIndexes = [3]; // Cộng 5 Điểm (slot 3)
+    else if (actualPrize === 'points_10') targetIndexes = [5]; // Cộng 10 Điểm (slot 5)
+    else if (actualPrize === 'points_20') targetIndexes = [7]; // Cộng 20 Điểm (slot 7)
+    else targetIndexes = [1, 4]; // Chúc May Mắn (slot 1, 4)
 
     // Pick random target index among available
     const targetIdx = targetIndexes[Math.floor(Math.random() * targetIndexes.length)];
@@ -547,13 +638,23 @@ function showPrizeResult(type, label, voucherId) {
     if (type === 'empty') {
         document.getElementById('noPrizeModal').classList.remove('hidden');
     } else {
-        document.getElementById('prizeTitle').textContent = type === 'special' ? "Giải Đặc Biệt!" : "Chúc Mừng Bạn!";
-        document.getElementById('prizeTitle').style.color = type === 'special' ? "#8b5cf6" : "#ef4444";
-        document.getElementById('prizeDesc').textContent = `Bạn đã trúng 1 Voucher ${label}.`;
+        if (type.startsWith('points_')) {
+            document.getElementById('prizeTitle').textContent = "Tích Điểm Thành Đạt!";
+            document.getElementById('prizeTitle').style.color = "#22c55e";
+            document.getElementById('prizeDesc').textContent = `Bạn đã quay trúng ${label} vào tài khoản thẻ thành viên.`;
 
-        const btnUseNow = document.getElementById('btnUseNow');
-        if (btnUseNow && voucherId) {
-            btnUseNow.href = `order.html?voucher=${voucherId}`;
+            const btnUseNow = document.getElementById('btnUseNow');
+            if (btnUseNow) btnUseNow.style.display = 'none'; // No voucher to use
+        } else {
+            document.getElementById('prizeTitle').textContent = type === 'special' ? "Giải Đặc Biệt!" : "Chúc Mừng Bạn!";
+            document.getElementById('prizeTitle').style.color = type === 'special' ? "#8b5cf6" : "#ef4444";
+            document.getElementById('prizeDesc').textContent = `Bạn đã trúng 1 Voucher ${label}.`;
+
+            const btnUseNow = document.getElementById('btnUseNow');
+            if (btnUseNow && voucherId) {
+                btnUseNow.style.display = 'inline-block';
+                btnUseNow.href = `order.html?voucher=${voucherId}`;
+            }
         }
 
         document.getElementById('prizeModal').classList.remove('hidden');
@@ -578,19 +679,21 @@ window.closePrizeModal = function () {
 // Reset feature for testing
 btnResetTest.addEventListener('click', async () => {
     if (!currentUserId) return;
-    if (!confirm("Hệ thống sẽ xóa TẤT CẢ danh sách trúng thưởng, lịch sử của bạn, và khôi phục mốc Voucher (1 Đặc Biệt, 10 Thường) để test lại từ đầu. Đồng ý?")) return;
+    if (!confirm("Hệ thống sẽ xóa TẤT CẢ danh sách trúng thưởng, lịch sử quay của TẤT CẢ TÀI KHOẢN, và khôi phục mốc Voucher (1 Đặc Biệt, 10 Thường) để test lại từ đầu. Đồng ý?")) return;
     try {
         const today = getTodayString();
-        // Xóa lịch sử quay của bản thân (Mở lại 1 lượt miễn phí)
-        await set(ref(database, `lucky_wheel/history/${today}/${currentUserId}/spinCount`), 0);
+        // Xóa lịch sử quay của TẤT CẢ mọi thành viên trong hôm nay
+        await set(ref(database, `lucky_wheel/history/${today}`), null);
 
         // Xóa danh sách trúng thưởng public
         await set(ref(database, 'lucky_wheel/winners'), null);
 
-        // Khôi phục lại Kho Thưởng ban đầu
+        // Reset lượng voucher trong pool về lại phễu 200 lượt/ngày
         await set(ref(database, 'lucky_wheel/pool'), {
             special: 1,
-            normal: 10,
+            normal_morning: 3,
+            normal_afternoon: 4,
+            normal_evening: 3,
             last_reset_date: today
         });
 
