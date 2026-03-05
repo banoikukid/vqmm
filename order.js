@@ -108,8 +108,8 @@ onAuthStateChanged(auth, async (user) => {
             const snapshot = await get(ref(database, `users/${user.uid}`));
             if (snapshot.exists()) {
                 userData = snapshot.val();
-                userNameDisplay.textContent = userData.name ? userData.name : 'Bạn';
-                userPointsDisplay.textContent = userData.points || 0;
+                if (userNameDisplay) userNameDisplay.textContent = userData.name ? userData.name : 'Bạn';
+                if (userPointsDisplay) userPointsDisplay.textContent = userData.points || 0;
             }
         } catch (error) {
             console.error("Error fetching user data:", error);
