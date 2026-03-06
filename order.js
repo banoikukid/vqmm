@@ -562,7 +562,9 @@ window.handleCheckout = async function () {
         // Points are now granted ONLY when admin marks order as completed
         // Update local state and UI
         userData.points = parseInt(userData.points) || 0; // retain existing
-        userPointsDisplay.textContent = userData.points;
+        if (userPointsDisplay) {
+            userPointsDisplay.textContent = userData.points;
+        }
 
         // 4. Success Feedback
         cart = [];

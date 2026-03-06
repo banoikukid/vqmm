@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-import { getDatabase, ref, get, update, push, set, serverTimestamp, runTransaction, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, get, update, push, set, remove, serverTimestamp, runTransaction, onValue, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAwwtUtwGqXCyvgM4DVRQUsabwrgzjfDyc",
@@ -18,16 +18,16 @@ const auth = getAuth(app);
 const database = getDatabase(app);
 
 // VIP Wheel Segments (Sum of degrees = 360)
-// Made big prizes visually massive to trigger FOMO, actual odds are backend-controlled.
+// Enhanced Premium Colors & Styling
 const vipSegments = [
-    { label: "10 Ly Trà Sữa", type: "first", degrees: 40, color: '#fef08a', stroke: '#eab308' },
-    { label: "Voucher 5K", type: "third", degrees: 50, color: '#fff1f2', stroke: '#fda4af' },
-    { label: "Combo 3 Ly", type: "second", degrees: 40, color: '#bae6fd', stroke: '#0ea5e9' },
-    { label: "Voucher 5K", type: "third", degrees: 50, color: '#fefce8', stroke: '#fde047' },
-    { label: "10 Ly Trà Sữa", type: "first", degrees: 40, color: '#fef08a', stroke: '#eab308' },
-    { label: "Voucher 5K", type: "third", degrees: 50, color: '#fdf4ff', stroke: '#f5d0fe' },
-    { label: "Combo 3 Ly", type: "second", degrees: 40, color: '#bae6fd', stroke: '#0ea5e9' },
-    { label: "Voucher 5K", type: "third", degrees: 50, color: '#f8fafc', stroke: '#cbd5e1' }
+    { label: "10 Ly Trà Sữa", type: "first", degrees: 18, color: '#fee171', stroke: '#eab308', textColor: '#c82027' },
+    { label: "Voucher 5K", type: "third", degrees: 63, color: '#ffffff', stroke: '#cbd5e1', textColor: '#64748b' },
+    { label: "Combo 3 Ly", type: "second", degrees: 36, color: '#bce3ff', stroke: '#cbd5e1', textColor: '#0d47a1' },
+    { label: "Voucher 5K", type: "third", degrees: 63, color: '#fdeeec', stroke: '#f472b6', textColor: '#64748b' },
+    { label: "10 Ly Trà Sữa", type: "first", degrees: 18, color: '#fee171', stroke: '#eab308', textColor: '#c82027' },
+    { label: "Voucher 5K", type: "third", degrees: 63, color: '#ffffff', stroke: '#cbd5e1', textColor: '#64748b' },
+    { label: "Combo 3 Ly", type: "second", degrees: 36, color: '#bce3ff', stroke: '#cbd5e1', textColor: '#0d47a1' },
+    { label: "Voucher 5K", type: "third", degrees: 63, color: '#fdeeec', stroke: '#f472b6', textColor: '#64748b' }
 ];
 
 let wheelRotation = 0;
@@ -40,7 +40,7 @@ const vipSpinStatus = document.getElementById('vipSpinStatus');
 const vipWheelCanvas = document.getElementById('vipWheelCanvas');
 const vipCtx = vipWheelCanvas ? vipWheelCanvas.getContext('2d') : null;
 
-// Draw Wheel with varying sizes
+// Draw Wheel with premium aesthetics
 function drawVipWheel() {
     if (!vipCtx) return;
     const width = vipWheelCanvas.width;
@@ -51,42 +51,39 @@ function drawVipWheel() {
 
     vipCtx.clearRect(0, 0, width, height);
 
-    let startAngle = 0;
+    // Initial orientation: first segment starts at top offset
+    let startAngle = -112.5 * Math.PI / 180;
+
     for (let i = 0; i < vipSegments.length; i++) {
-        const sliceAngle = (vipSegments[i].degrees * Math.PI) / 180;
+        const seg = vipSegments[i];
+        const sliceAngle = (seg.degrees * Math.PI) / 180;
 
         vipCtx.beginPath();
-        vipCtx.fillStyle = vipSegments[i].color;
         vipCtx.moveTo(centerX, centerY);
         vipCtx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle, false);
         vipCtx.lineTo(centerX, centerY);
+
+        vipCtx.fillStyle = seg.color;
         vipCtx.fill();
 
-        vipCtx.lineWidth = 1.5;
-        vipCtx.strokeStyle = vipSegments[i].stroke;
+        // Divider
+        vipCtx.lineWidth = 1;
+        vipCtx.strokeStyle = seg.stroke;
         vipCtx.stroke();
 
         // Draw Text
         vipCtx.save();
         vipCtx.translate(centerX, centerY);
-        // Rotate to middle of slice
         vipCtx.rotate(startAngle + sliceAngle / 2);
         vipCtx.textAlign = 'right';
         vipCtx.textBaseline = 'middle';
 
-        if (vipSegments[i].type === 'first') {
-            vipCtx.fillStyle = '#b91c1c';
-            vipCtx.font = '900 13px Outfit, sans-serif';
-        } else if (vipSegments[i].type === 'second') {
-            vipCtx.fillStyle = '#1d4ed8';
-            vipCtx.font = '900 15px Outfit, sans-serif';
-        } else {
-            vipCtx.fillStyle = '#64748b';
-            vipCtx.font = 'bold 16px Outfit, sans-serif';
-        }
+        vipCtx.fillStyle = seg.textColor;
+        vipCtx.font = '900 16px Outfit, sans-serif';
 
-        // Push text to edge nicely
-        vipCtx.fillText(vipSegments[i].label, radius - 15, 0);
+        // Add text
+        vipCtx.fillText(seg.label, radius - 20, 0);
+
         vipCtx.restore();
 
         startAngle += sliceAngle;
@@ -114,7 +111,7 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// Calculate Max First Prizes based on time distribution
+// Calculate Max First Prizes based on time distribution (Week 1: 1, Week 2: 2, Week 3: 3, Week 4+: 5)
 function getMaxFirstPrizes() {
     const day = new Date().getDate();
     if (day <= 7) return 1;
@@ -123,7 +120,14 @@ function getMaxFirstPrizes() {
     return 5;
 }
 
-const MAX_SECOND_PRIZES = 10;
+// Calculate Max Second Prizes based on time distribution (Week 1: 2, Week 2: 5, Week 3: 7, Week 4+: 10)
+function getMaxSecondPrizes() {
+    const day = new Date().getDate();
+    if (day <= 7) return 2;
+    if (day <= 14) return 5;
+    if (day <= 21) return 7;
+    return 10;
+}
 
 function getMonthString() {
     const d = new Date();
@@ -174,46 +178,41 @@ async function handleVipSpin() {
         // Determine Prize Logic
         vipSpinStatus.textContent = "Đang quay...";
         isSpinning = true;
-
         const monthStr = getMonthString();
-        const poolRef = ref(database, `vip_pool/${monthStr}`);
-        const poolSnap = await get(poolRef);
-        let poolData = poolSnap.exists() ? poolSnap.val() : { current_first: 0, current_second: 0 };
+        const configRef = ref(database, `campaign_configs/${monthStr}`);
 
-        const maxFirst = getMaxFirstPrizes();
-        let firstAvail = Math.max(0, maxFirst - (poolData.current_first || 0));
-        let secondAvail = Math.max(0, MAX_SECOND_PRIZES - (poolData.current_second || 0));
-
-        let wonType = 'third'; // Default Voucher 5k
+        let requestedType = 'third';
         const rand = Math.random() * 100;
 
-        // 2.5% First Prize
-        if (rand < 2.5 && firstAvail > 0) {
-            wonType = 'first';
-        } else if (rand < 7.5 && secondAvail > 0) {
-            // 5% Second Prize (from 2.5 to 7.5)
-            wonType = 'second';
+        if (rand < 2.5) {
+            requestedType = 'first';
+        } else if (rand < 7.5) {
+            requestedType = 'second';
         }
 
-        // Try to claim the pool quota
-        if (wonType === 'first' || wonType === 'second') {
-            const txResult = await runTransaction(poolRef, (currentData) => {
-                if (currentData === null) currentData = { current_first: 0, current_second: 0 };
+        const maxFirst = getMaxFirstPrizes();
+        const maxSecond = getMaxSecondPrizes();
+        let finalWonType = 'third'; // Fallback
 
-                if (wonType === 'first') {
-                    if (currentData.current_first >= maxFirst) return; // abort
-                    currentData.current_first++;
-                } else {
-                    if (currentData.current_second >= MAX_SECOND_PRIZES) return; // abort
-                    currentData.current_second++;
-                }
-                return currentData;
-            });
+        const txResult = await runTransaction(configRef, (currentData) => {
+            if (currentData === null) currentData = { first_prizes_won: 0, second_prizes_won: 0, total_spins: 0, lucky_prizes_won: 0 };
 
-            if (!txResult.committed) {
-                wonType = 'third'; // Fallback if someone else snatched it
+            if (requestedType === 'first' && (currentData.first_prizes_won || 0) < maxFirst) {
+                currentData.first_prizes_won = (currentData.first_prizes_won || 0) + 1;
+                finalWonType = 'first';
+            } else if (requestedType === 'second' && (currentData.second_prizes_won || 0) < maxSecond) {
+                currentData.second_prizes_won = (currentData.second_prizes_won || 0) + 1;
+                finalWonType = 'second';
+            } else {
+                currentData.lucky_prizes_won = (currentData.lucky_prizes_won || 0) + 1;
+                finalWonType = 'third';
             }
-        }
+
+            currentData.total_spins = (currentData.total_spins || 0) + 1;
+            return currentData;
+        });
+
+        const wonType = finalWonType; // Pass resolved wonType to animation
 
         animateWheelAndResolve(wonType);
 
@@ -228,7 +227,7 @@ async function handleVipSpin() {
 function animateWheelAndResolve(wonType) {
     // Find matching segments for wonType
     const matchingSegments = [];
-    let startAngle = 0;
+    let startAngle = -112.5;
 
     for (let i = 0; i < vipSegments.length; i++) {
         const deg = vipSegments[i].degrees;
@@ -325,21 +324,31 @@ async function processWin(wonType) {
             createdAt: new Date().toISOString()
         });
 
-        // Record major wins to global broadcast
-        if (wonType === 'first' || wonType === 'second') {
-            const userSnap = await get(ref(database, `users/${currentUserId}`));
-            const phone = userSnap.exists() ? userSnap.val().phone : '';
-            const { shortName, safePhone } = anonymizeData(currentUserName, phone);
+        // Record ALL wins to monthly history
+        const userSnap2 = await get(ref(database, `users/${currentUserId}`));
+        const phone2 = userSnap2.exists() ? userSnap2.val().phone : '';
+        const { shortName: sName, safePhone: sPhone } = anonymizeData(currentUserName, phone2);
 
-            await push(ref(database, 'vip_winners'), {
-                timestamp: serverTimestamp(),
-                name: shortName,
-                phone: safePhone,
-                prize: giftName,
-                type: wonType
-            });
+        const monthStr = getMonthString();
+
+        const winnerData = {
+            uid: currentUserId,
+            name: sName,
+            phone: sPhone,
+            prize_id: wonType,
+            prize_name: giftName,
+            timestamp: Date.now()
+        };
+
+        // All spins go to history (for ticker)
+        await push(ref(database, `vip_spin_history/${monthStr}`), winnerData);
+
+        // First & Second prizes also go to vip_winners
+        if (wonType === 'first' || wonType === 'second') {
+            await push(ref(database, `vip_winners/${monthStr}`), winnerData);
         }
 
+        handleJackpotEffects(wonType);
         showWinModal(wonType, giftName, voucherId);
 
     } catch (e) {
@@ -349,6 +358,19 @@ async function processWin(wonType) {
     isSpinning = false;
     btnVipSpin.disabled = false;
     vipSpinStatus.textContent = "";
+
+    // Stats will update via onValue listener
+}
+
+function handleJackpotEffects(type) {
+    const leds = document.getElementById('vipWheelOuter');
+    if (!leds) return;
+    if (type === 'first' || type === 'second') {
+        leds.classList.add('jackpot-glow');
+        setTimeout(() => {
+            leds.classList.remove('jackpot-glow');
+        }, 8000); // Effect duration 8 seconds for maximum hype
+    }
 }
 
 function showWinModal(type, title, voucherCode) {
@@ -397,8 +419,9 @@ if (btnVipSpin) {
 // TOAST NOTIFICATION LOGIC
 // ------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-    // We will listen for new entries in vip_winners 
-    const winnersRef = query(ref(database, 'vip_winners'), limitToLast(5));
+    const monthStr = getMonthString();
+    // We will listen for new entries in this month's history
+    const winnersRef = query(ref(database, `vip_spin_history/${monthStr}`), limitToLast(5));
 
     // We don't want to show notifications for old data on load, so we use a timestamp baseline
     const loadTime = Date.now();
@@ -420,7 +443,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Display the most recent winner if it was added AFTER load time
         const latestWinner = newWinners[newWinners.length - 1];
         if (latestWinner && latestWinner.timestamp > loadTime) {
-            showToast(latestWinner);
+            // Mapping back to the fields Expected by showToast
+            const toastData = {
+                name: latestWinner.name,
+                phone: latestWinner.phone,
+                prize: latestWinner.prize_name,
+                type: latestWinner.prize_id,
+                timestamp: latestWinner.timestamp
+            };
+            showToast(toastData);
         }
     });
 });
@@ -485,7 +516,8 @@ if (btnViewVipWinners) {
         if (btnViewAllVipWinners) btnViewAllVipWinners.style.display = 'none';
         vipWinnersList.innerHTML = '<p style="text-align: center; color: #94a3b8;">Đang tải danh sách...</p>';
 
-        const q = query(ref(database, 'vip_winners'), limitToLast(100)); // Load more to find top ones
+        const monthStr = getMonthString();
+        const q = query(ref(database, `vip_winners/${monthStr}`), limitToLast(500));
         try {
             const snap = await get(q);
             if (!snap.exists()) {
@@ -494,29 +526,46 @@ if (btnViewVipWinners) {
             }
 
             const winners = [];
-            snap.forEach(child => winners.push(child.val()));
-
-            // Sort by Best Prize (first > second > third) then by Time
-            const rankMap = { 'first': 3, 'second': 2, 'third': 1 };
-            winners.sort((a, b) => {
-                const rankA = rankMap[a.type] || 0;
-                const rankB = rankMap[b.type] || 0;
-                if (rankA !== rankB) return rankB - rankA;
-                return b.timestamp - a.timestamp;
+            snap.forEach(child => {
+                const w = child.val();
+                winners.push({
+                    name: w.name,
+                    phone: w.phone,
+                    prize: w.prize_name,
+                    type: w.prize_id,
+                    timestamp: w.timestamp
+                });
             });
 
-            loadedWinnersHTML = winners.map((w, index) => {
-                const dateOpts = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
-                const dateStr = new Date(w.timestamp).toLocaleDateString('vi-VN', dateOpts);
+            // Filter to ONLY Giải Nhất & Nhì
+            const premiumOnly = winners.sort((a, b) => {
+                const rankMap = { 'first': 2, 'second': 1 };
+                if ((rankMap[a.type] || 0) !== (rankMap[b.type] || 0)) return (rankMap[b.type] || 0) - (rankMap[a.type] || 0);
+                return b.timestamp - a.timestamp;
+            });
+            if (premiumOnly.length === 0) {
+                vipWinnersList.innerHTML = '<p style="text-align: center; color: #94a3b8;">Tháng này chưa có ai trúng Giải Nhất/Nhì. Bạn sẻ là người đầu tiên chứ?</p>';
+                return;
+            }
 
-                let emoji = '🎉';
-                let styleType = 'background: #f8fafc; border: 1px solid #e2e8f0;';
-                if (w.type === 'first') { emoji = '👑'; styleType = 'background: #fef08a; border: 2px solid #f59e0b;'; }
-                else if (w.type === 'second') { emoji = '🍹'; styleType = 'background: #e0f2fe; border: 1px solid #7dd3fc;'; }
+            // Header note
+            const note = `<div style="background: linear-gradient(135deg,#fef08a,#fde68a); border: 2px solid #d97706; border-radius: 10px; padding: 0.6rem 1rem; margin-bottom: 1rem; text-align: center; font-weight: 700; font-size: 0.85rem; color: #92400e;">
+                &#x1F451; Tổng cộng: ${premiumOnly.filter(w => w.type === 'first').length} Giải Nhất &nbsp;|&nbsp; &#x1F31F; ${premiumOnly.filter(w => w.type === 'second').length} Giải Nhì
+            </div>`;
+
+            loadedWinnersHTML = premiumOnly.map((w, index) => {
+                const dateOpts = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
+                const dateStr = w.timestamp ? new Date(w.timestamp).toLocaleString('vi-VN', dateOpts) : '';
+
+                let emoji = w.type === 'first' ? '&#x1F451;' : '&#x1F31F;';
+                let styleType = w.type === 'first'
+                    ? 'background: linear-gradient(135deg,#fef08a,#fde68a); border: 2px solid #d97706;'
+                    : 'background: linear-gradient(135deg,#ccfbf1,#a7f3d0); border: 2px solid #0d9488;';
+                const textColor = w.type === 'first' ? '#92400e' : '#134e4a';
 
                 let rankBadge = '';
                 if (index < 3) {
-                    const badgeColors = ['#fbbf24', '#cbd5e1', '#d97706'];
+                    const badgeColors = ['#d97706', '#0d9488', '#f97316'];
                     rankBadge = `<div style="position: absolute; top: -10px; left: -10px; width: 24px; height: 24px; background: ${badgeColors[index]}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 5;">${index + 1}</div>`;
                 }
 
@@ -526,16 +575,17 @@ if (btnViewVipWinners) {
                         <div style="display: flex; gap: 1rem; align-items: center;">
                             <div style="font-size: 1.5rem; background: rgba(255,255,255,0.8); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">${emoji}</div>
                             <div>
-                                <div style="font-weight: 800; color: #1e293b;">${w.name} <span style="font-weight: 500; font-size: 0.85rem; color: #64748b;">(${w.phone})</span></div>
+                                <div style="font-weight: 800; color: #1e293b;">${w.name || "Khách"} <span style="font-weight: 500; font-size: 0.85rem; color: #64748b;">(${w.phone || "---"})</span></div>
                                 <div style="font-size: 0.85rem; color: #64748b;">${dateStr}</div>
                             </div>
                         </div>
-                        <div style="font-weight: 900; color: ${w.type === 'first' ? '#b91c1c' : '#0ea5e9'}; text-align: right; max-width: 120px;">${w.prize}</div>
+                        <div style="font-weight: 900; color: ${textColor}; text-align: right; max-width: 120px;">${w.prize || "Quà Ẩn"}</div>
                     </div>
                 `;
             });
 
-            renderWinners(10); // Show top 10
+            vipWinnersList.innerHTML = note + loadedWinnersHTML.join('');
+            if (btnViewAllVipWinners) btnViewAllVipWinners.style.display = 'none';
 
         } catch (e) {
             vipWinnersList.innerHTML = '<p style="text-align: center; color: #ef4444;">Lỗi tải dữ liệu.</p>';
@@ -557,69 +607,88 @@ function renderWinners(limit) {
 }
 
 // ------------------------------------
-// HOMEPAGE INIT: TOP 3 & MARQUEE
+// HOMEPAGE INIT: TOP WINNERS & MARQUEE
 // ------------------------------------
 async function loadHomepageWinners() {
     const vipTop3List = document.getElementById('vipTop3List');
-    const vipMarqueeContent = document.getElementById('vipMarqueeContent');
-    if (!vipTop3List || !vipMarqueeContent) return;
+    const vipMiniTicker = document.getElementById('vipMiniTicker');
+
+    const prizeConfig = {
+        first: { emoji: '👑', icon: '🏆', bgStyle: 'background: linear-gradient(135deg, #fefce8, #fef08a); border: 2px solid #eab308; box-shadow: 0 4px 15px rgba(234, 179, 8, 0.2);', textColor: '#854d0e', badgeColor: '#eab308' },
+        second: { emoji: '🌟', icon: '🥈', bgStyle: 'background: linear-gradient(135deg, #ecfeff, #a5f3fc); border: 2px solid #0891b2; box-shadow: 0 4px 15px rgba(8, 145, 178, 0.1);', textColor: '#164e63', badgeColor: '#0891b2' },
+        third: { emoji: '🍀', icon: '🥤', bgStyle: 'background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #22c55e; box-shadow: 0 4px 10px rgba(34, 197, 94, 0.05);', textColor: '#14532d', badgeColor: '#22c55e' }
+    };
+
+    const monthStr = getMonthString();
 
     try {
-        const q = query(ref(database, 'vip_winners'), limitToLast(50));
-        const snap = await get(q);
+        // 1. Load Premium Winners (Bảng Vàng)
+        if (vipTop3List) {
+            onValue(query(ref(database, `vip_winners/${monthStr}`), limitToLast(500)), (snap) => {
+                if (!snap.exists()) {
+                    vipTop3List.innerHTML = `<div style="text-align: center; padding: 0.5rem 0.75rem; background: linear-gradient(135deg,#fef08a,#fde68a); border: 2px solid #d97706; border-radius: 10px; font-weight: 700; font-size: 0.85rem; color: #92400e;">👑 Giải Nhất & Nhì chưa ai trúng tháng này! Hãy là Đầu Tiên win!</div>`;
+                    return;
+                }
 
-        if (!snap.exists()) {
-            vipTop3List.innerHTML = '<p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">Chưa có người trúng giải. Hãy là người đầu tiên!</p>';
-            vipMarqueeContent.innerHTML = '✨ Cơ hội trúng 10 Ly Trà Sữa Miễn Phí đang chờ đón bạn! Quay ngay hôm nay! ✨';
-            return;
+                const winners = [];
+                snap.forEach(child => { winners.push(child.val()); });
+
+                // Sort by rank then timestamp desc
+                winners.sort((a, b) => {
+                    const rankMap = { first: 2, second: 1 };
+                    if ((rankMap[a.prize_id] || 0) !== (rankMap[b.prize_id] || 0)) return (rankMap[b.prize_id] || 0) - (rankMap[a.prize_id] || 0);
+                    return b.timestamp - a.timestamp;
+                });
+
+                vipTop3List.innerHTML = winners.map((w, index) => {
+                    const cfg = prizeConfig[w.prize_id] || prizeConfig.second;
+                    const dateOpts = { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
+                    const dateStr = w.timestamp ? new Date(w.timestamp).toLocaleString('vi-VN', dateOpts) : '';
+                    const rankBadge = `<div style="position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; background: ${cfg.badgeColor}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; border: 2px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.15); z-index: 5;">${index + 1}</div>`;
+                    const prizeText = w.prize_name ? w.prize_name.replace('MIỄN PHÍ', '<br><small style="font-size: 0.65rem; opacity: 0.8; font-weight: 700;">MIỄN PHÍ</small>') : "Quà Ẩn";
+                    return `
+                        <div style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1rem; border-radius: 16px; ${cfg.bgStyle} margin-bottom: 0.5rem; transition: transform 0.2s;">
+                            ${rankBadge}
+                            <div style="display: flex; gap: 0.85rem; align-items: center;">
+                                <div style="font-size: 1.5rem; background: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.05);">${cfg.icon}</div>
+                                <div>
+                                    <div style="font-weight: 800; color: #1e293b; font-size: 0.95rem;">${w.name || "Khách"} <span style="font-weight:500; font-size: 0.75rem; color: #64748b;">(${w.phone || "---"})</span></div>
+                                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 600;">${dateStr}</div>
+                                </div>
+                            </div>
+                            <div style="font-weight: 900; color: ${cfg.textColor}; font-size: 0.85rem; text-align: right; line-height: 1.1;">${prizeText}</div>
+                        </div>`;
+                }).join('');
+            });
         }
 
-        const winners = [];
-        snap.forEach(child => winners.push(child.val()));
+        // 2. Load Marquee Data (Top 30 Recent)
+        if (vipMiniTicker) {
+            onValue(query(ref(database, `vip_spin_history/${monthStr}`), limitToLast(30)), (snap) => {
+                if (!snap.exists()) {
+                    vipMiniTicker.parentElement.style.display = 'none';
+                    return;
+                }
 
-        // 1. Marquee (Recent 5)
-        const recentWinners = [...winners].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
-        const marqueeStrings = recentWinners.map(w => {
-            const emoji = w.type === 'first' ? '👑' : (w.type === 'second' ? '🍹' : '🎉');
-            return `${emoji} Chúc mừng <b>${w.name}</b> (${w.phone}) vừa trúng thưởng <b>${w.prize}</b>!`;
-        });
-        vipMarqueeContent.innerHTML = marqueeStrings.join('&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;') + '&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;' + marqueeStrings.join('&nbsp;&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;&nbsp;');
+                const recentWinners = [];
+                snap.forEach(child => { recentWinners.push(child.val()); });
+                recentWinners.sort((a, b) => b.timestamp - a.timestamp);
 
-        // 2. Top 3 List
-        const rankMap = { 'first': 3, 'second': 2, 'third': 1 };
-        const topWinners = [...winners].sort((a, b) => {
-            const rankA = rankMap[a.type] || 0;
-            const rankB = rankMap[b.type] || 0;
-            if (rankA !== rankB) return rankB - rankA;
-            return b.timestamp - a.timestamp;
-        }).slice(0, 3);
+                vipMiniTicker.parentElement.style.display = 'block';
+                const marqueeStrings = recentWinners.map(w => {
+                    const cfg = prizeConfig[w.prize_id] || prizeConfig.third;
+                    return `${cfg.emoji} Chúc mừng <b>${w.name}</b> (${w.phone}) trúng <b>${w.prize_name || "Voucher Giảm 5K"}</b>! &nbsp;`;
+                });
 
-        vipTop3List.innerHTML = topWinners.map((w, index) => {
-            const dateOpts = { day: '2-digit', month: '2-digit' };
-            const dateStr = new Date(w.timestamp).toLocaleDateString('vi-VN', dateOpts);
+                // Duplicate for smooth loop
+                const fullText = marqueeStrings.join(' • ') + ' • ' + marqueeStrings.join(' • ');
+                vipMiniTicker.innerHTML = fullText;
 
-            let emoji = '🎉';
-            let styleType = 'background: rgba(255,255,255,0.8); border: 1px solid #e2e8f0;';
-            if (w.type === 'first') { emoji = '👑'; styleType = 'background: #fef08a; border: 2px solid #f59e0b;'; }
-            else if (w.type === 'second') { emoji = '🍹'; styleType = 'background: #e0f2fe; border: 1px solid #7dd3fc;'; }
-
-            const badgeColors = ['#fbbf24', '#cbd5e1', '#d97706'];
-            const rankBadge = `<div style="position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; background: ${badgeColors[index]}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 5;">${index + 1}</div>`;
-
-            return `
-                <div style="position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-radius: 12px; ${styleType} margin-bottom: 0.2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    ${rankBadge}
-                    <div style="display: flex; gap: 0.75rem; align-items: center;">
-                        <div style="font-size: 1.2rem; background: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">${emoji}</div>
-                        <div>
-                            <div style="font-weight: 800; color: #1e293b; font-size: 0.9rem;">${w.name}</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">${dateStr}</div>
-                        </div>
-                    </div>
-                    <div style="font-weight: 900; color: ${w.type === 'first' ? '#b91c1c' : '#0ea5e9'}; font-size: 0.85rem; text-align: right; max-width: 100px;">${w.prize}</div>
-                </div>
-            `;
-        }).join('');
+                // Dynamically adjust speed: more text = longer duration
+                const duration = Math.max(25, fullText.length * 0.08); // 0.08s per character roughly
+                vipMiniTicker.style.animationDuration = `${duration}s`;
+            });
+        }
 
     } catch (e) {
         console.error("Error loading homepage winners:", e);
@@ -627,4 +696,109 @@ async function loadHomepageWinners() {
 }
 
 // Call on load
-document.addEventListener('DOMContentLoaded', loadHomepageWinners);
+document.addEventListener('DOMContentLoaded', () => {
+    loadHomepageWinners();
+    loadVipMonthlyStats();
+});
+
+// ------------------------------------
+// MONTHLY STATS PANEL
+// ------------------------------------
+async function loadVipMonthlyStats() {
+    const statsEl = document.getElementById('vipMonthlyStats');
+    const monthLabelEl = document.getElementById('vipStatsMonthLabel');
+    if (!statsEl) return;
+
+    const now = new Date();
+    const monthStr = getMonthString();
+    const day = now.getDate();
+    const monthName = now.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+
+    if (monthLabelEl) monthLabelEl.textContent = monthName;
+
+    // Calculate current max first prize based on week
+    const maxFirst = getMaxFirstPrizes();
+    const maxSecond = getMaxSecondPrizes();
+
+    try {
+        // Campaign stats listener
+        onValue(ref(database, `campaign_configs/${monthStr}`), (snap) => {
+            const data = snap.exists() ? snap.val() : {};
+            const usedFirst = data.first_prizes_won || 0;
+            const usedSecond = data.second_prizes_won || 0;
+            const totalSpins = data.total_spins || 0;
+            const thirdCount = data.lucky_prizes_won || Math.max(0, totalSpins - usedFirst - usedSecond);
+
+            const maxFirst = getMaxFirstPrizes();
+            const remainFirst = Math.max(0, maxFirst - usedFirst);
+            const remainSecond = Math.max(0, maxSecond - usedSecond);
+
+            function progressBar(used, max, color) {
+                const pct = max > 0 ? Math.round((used / max) * 100) : 100;
+                const remainColor = pct >= 100 ? '#ef4444' : color;
+                return `
+            <div style="height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 4px;">
+                <div style="height: 100%; width: ${Math.min(100, pct)}%; background: ${remainColor}; border-radius: 10px; transition: width 0.5s;"></div>
+            </div>`;
+            }
+
+            function statRow(emoji, label, used, max, color, badge) {
+                const remain = Math.max(0, max - used);
+                const isFull = used >= max;
+                return `
+            <div style="background: ${isFull ? '#fef2f2' : 'linear-gradient(to right, #ffffff, #f8fafc)'}; border: 1px solid ${isFull ? '#fca5a5' : '#e2e8f0'}; border-radius: 12px; padding: 0.6rem 0.8rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div style="font-size: 0.85rem; font-weight: 800; color: #334155;">${emoji} ${label}</div>
+                    <span style="font-size: 0.65rem; font-weight: 900; background: ${isFull ? '#ef4444' : color}; color: white; padding: 3px 8px; border-radius: 50px; text-transform: uppercase; letter-spacing: 0.5px;">${isFull ? 'HẾT GIẢI' : `CÒN ${remain}/${max}`}</span>
+                </div>
+                ${progressBar(used, max, color)}
+            </div>`;
+            }
+
+            statsEl.innerHTML = `
+                ${statRow('👑', 'Giải Nhất', usedFirst, 5, '#d97706', '5/tháng')}
+                ${statRow('🌟', 'Giải Nhì', usedSecond, 10, '#0d9488', '10/tháng')}
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #475569;">🎰 Tổng lượt quay tháng này</div>
+                    <span style="font-size: 1rem; font-weight: 900; color: #0ea5e9;">${totalSpins}</span>
+                </div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: #475569;">🍀 May Mắn đã phát</div>
+                    <span style="font-size: 1rem; font-weight: 900; color: #f97316;">${thirdCount}</span>
+                </div>
+            `;
+
+            // Also update the lucky count in the left prize structure panel
+            const luckyCountEl = document.getElementById('vipLuckyCount');
+            if (luckyCountEl) luckyCountEl.textContent = thirdCount;
+        }); // end campaign listener
+
+    } catch (e) {
+        console.error('Error loading vip stats:', e);
+        statsEl.innerHTML = '<p style="font-size: 0.85rem; color: #94a3b8; text-align: center;">Không thể tải thống kê.</p>';
+    }
+}
+
+async function resetVipData() {
+    if (!confirm("⚠️ BẠN CÓ CHẮC CHẮN MUỐN RESET DỮ LIỆU THÁNG NÀY?\nHành động này sẽ xóa dữ liệu Giải Nhất/Nhì/May Mắn của CHỈ THÁNG HIỆN TẠI (giữ lại các tháng trước).")) return;
+
+    try {
+        const monthStr = getMonthString();
+        // 1. Erase Campaign stats for this month
+        await remove(ref(database, `campaign_configs/${monthStr}`));
+
+        // 2. Erase History for this month
+        await remove(ref(database, `vip_spin_history/${monthStr}`));
+
+        // 3. Erase Winners for this month
+        await remove(ref(database, `vip_winners/${monthStr}`));
+
+        alert("✅ Đã reset dữ liệu tháng này thành công!");
+        location.reload();
+    } catch (e) {
+        alert("❌ Lỗi: " + e.message);
+    }
+}
+
+// Global exposure for the reset button
+window.resetVipData = resetVipData;
