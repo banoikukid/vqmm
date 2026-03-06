@@ -1,7 +1,7 @@
 /* vongquay.css */
 
 :root {
-    --primary: #fbbf24;
+    --primary: #f97316;
     --primary-dark: #f59e0b;
     --background: #fdf8f5;
     --surface: #ffffff;
@@ -51,7 +51,7 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     background: white;
     padding: 10px;
-    border: 5px solid #fbbf24;
+    border: 5px solid #f97316;
 }
 
 .wheel {

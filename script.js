@@ -18,24 +18,24 @@ const db = getDatabase(app);
 const defaultBanners = [
     {
         imageUrl: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?q=80&w=2070&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>FUN FRESH</span><br>FRIENDLY",
-        subheadline: "Thưởng thức trà sữa Matcha tươi mát siêu cuốn, mang đến niềm vui và năng lượng tích cực cho cả ngày dài!",
-        buttonText: "Đặt Món Ngay",
-        linkUrl: "order.html"
+        headline: "<span style='color: #f97316;'>SĂN VOUCHER</span><br>GIẢM 50%",
+        subheadline: "Đừng bỏ lỡ cơ hội thưởng thức trà sữa ngon tuyệt với giá 'hạt dẻ'. Click ngay để nhận mã!",
+        buttonText: "NHẬN MÃ TRÊN FANPAGE <span style='font-size: 1.2rem; margin-bottom: -4px;'>💬</span>",
+        linkUrl: "https://www.facebook.com/tearusvn"
     },
     {
         imageUrl: "https://images.unsplash.com/photo-1576092762791-dd9e22205948?q=80&w=2070&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>HƯƠNG VỊ</span><br>NGUYÊN BẢN",
-        subheadline: "Sự kết hợp hoàn hảo giữa trà xanh nguyên lá thượng hạng và trân châu dai giòn sần sật.",
-        buttonText: "Xem Menu",
-        linkUrl: "order.html"
+        headline: "<span style='color: #22c55e;'>TRỞ THÀNH VIP</span><br>NHẬN QUÀ KHỦNG",
+        subheadline: "Tích điểm đổi quà, nhận ưu đãi độc quyền, sinh nhật bất ngờ... Đăng ký ngay, hoàn toàn miễn phí!",
+        buttonText: "ĐĂNG KÝ THÀNH VIÊN",
+        linkUrl: "login.html"
     },
     {
         imageUrl: "https://images.unsplash.com/photo-1598515089851-dceb2929de28?q=80&w=2070&auto=format&fit=crop",
-        headline: "<span class='highlight-blue'>FREE ƯU ĐÃI</span><br>CHO THÀNH VIÊN",
-        subheadline: "Trở thành hội viên TeaRus ngay hôm nay để nhận được hàng ngàn voucher và dễ dàng đổi điểm lấy quà siêu to.",
-        buttonText: "Đăng Ký Khách Hàng",
-        linkUrl: "login.html"
+        headline: "<span style='color: #f97316;'>THỰC ĐƠN MỚI</span><br>TƯƠI MÁT",
+        subheadline: "Vị ngon khó cưỡng từ những nguyên liệu tự nhiên nhất. Thử ngay Trà dâu tằm pha lê - Món 'tủ' của hè này!",
+        buttonText: "ĐẶT MÓN NGAY",
+        linkUrl: "order.html"
     }
 ];
 

@@ -1,13 +1,13 @@
 :root {
-    --primary: #fbbf24;
-    /* Gold */
-    --primary-hover: #f59e0b;
-    /* Darker Gold */
-    --secondary: #10b981;
-    /* Fresh Green Accent */
-    --background: #fdfbf7;
-    /* Very Light Cream/Off-White Base */
-    --surface: rgba(255, 255, 255, 0.85);
+    --primary: #f97316;
+    /* Orange Accent */
+    --primary-dark: #ea580c;
+    /* Darker Orange */
+    --secondary: #22c55e;
+    /* Tea Green */
+    --background: #fffbeb;
+    /* Cream Base */
+    --surface: rgba(255, 255, 255, 0.9);
     /* Glassmorphism Base - Lighter */
     --text-main: #1e293b;
     /* Dark Slate for contrast */
@@ -21,7 +21,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
 }
 
 html,
@@ -419,16 +419,17 @@ body {
 
 .hot-btn {
     background: var(--primary);
-    color: #fff;
+    color: #0f172a;
     padding: 0.6rem 1.2rem;
     border-radius: 8px;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
     transition: all 0.3s ease;
 }
 
 .hot-btn:hover {
-    background: var(--primary-dark);
+    background: var(--primary-dark, #ea580c);
+    color: #ffffff;
 }
 
 /* Responsive Hot Items */
@@ -1268,5 +1269,36 @@ canvas {
     .footer-container {
         grid-template-columns: 1fr;
         gap: 2.5rem;
+    }
+}
+
+/* Responsive Banner Overrides */
+@media (max-width: 768px) {
+    .hero-section {
+        height: 60vh;
+        min-height: 400px;
+        margin-bottom: 1.5rem;
+    }
+
+    .slide-headline {
+        font-size: 2.5rem;
+    }
+
+    .slide-headline.dark-text {
+        font-size: 2.5rem;
+    }
+
+    .slide-subheadline {
+        font-size: 1.05rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .slide-subheadline.dark-text {
+        font-size: 1.05rem;
+    }
+
+    .glow-btn {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
     }
 }

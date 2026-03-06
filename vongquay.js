@@ -39,13 +39,13 @@ window.isPoolEmpty = false; // Track if pool is completely exhausted
 
 // Wheel Segments Config
 const segments = [
-    { label: "Voucher 30K", type: "special", color: "#fef08a", stroke: "#fbbf24", val: 30000 },
-    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
-    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24", val: 10000 },
+    { label: "Voucher 30K", type: "special", color: "#fef08a", stroke: "#f97316", val: 30000 },
+    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#f97316" },
+    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#f97316", val: 10000 },
     { label: "Cộng 5 Điểm", type: "points_5", color: "#bbf7d0", stroke: "#22c55e", val: 5 },
-    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#fbbf24" },
+    { label: "Chúc May Mắn", type: "empty", color: "#ffffff", stroke: "#f97316" },
     { label: "Cộng 10 Điểm", type: "points_10", color: "#86efac", stroke: "#22c55e", val: 10 },
-    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#fbbf24", val: 10000 },
+    { label: "Voucher 10K", type: "normal", color: "#fed7aa", stroke: "#f97316", val: 10000 },
     { label: "Cộng 20 Điểm", type: "points_20", color: "#4ade80", stroke: "#22c55e", val: 20 }
 ];
 
